@@ -1,0 +1,23 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# TensorFlow models
+*.h5
+*.keras
+
+# Dataset
+training/datasets/
+
+# Flutter
+frontend/flutter_app/build/
+frontend/flutter_app/.dart_tool/
+frontend/flutter_app/.packages
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
