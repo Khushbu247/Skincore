@@ -1,17 +1,21 @@
 from fastapi import FastAPI
 
 from backend.api.router import router
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="SkinCore API",
     version="1.0.0"
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],      # Restrict this in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(router)
 
 
-@app.get("/")
-def home():
-    return {
-        "message": "SkinCore Backend is running!"
-    }
