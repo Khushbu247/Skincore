@@ -1,34 +1,42 @@
+import time
 import numpy as np
 import tensorflow as tf
 
-from app.model_loader import infer
-from app.preprocessing import preprocess_image
-from utils.labels import CLASS_NAMES
+from backend.app.model_loader import infer
+from backend.app.preprocessing import preprocess_image
+from backend.utils.labels import CLASS_NAMES
 
 
 def predict_image(image_path):
 
-    image = preprocess_image(image_path)
+    start = time.time()
 
-    image_tensor = tf.convert_to_tensor(image)
+    # Preprocess image
+    img = preprocess_image(image_path)
 
-    outputs = infer(input_layer_1=image_tensor)
+    # Convert to Tensor
+    img_tensor = tf.convert_to_tensor(img, dtype=tf.float32)
 
-    probabilities = outputs["output_0"].numpy()[0]
+    # Run inference using SavedModel signature
+    outputs = infer(input_layer_1=img_tensor)
 
-    predicted_index = np.argmax(probabilities)
+    # Extract predictions
+    prediction = outputs["output_0"].numpy()[0]
 
-    prediction = CLASS_NAMES[predicted_index]
+    confidence = float(np.max(prediction))
 
-    confidence = float(probabilities[predicted_index]) * 100
+    predicted_class = CLASS_NAMES[np.argmax(prediction)]
 
-    probability_dict = {
-        CLASS_NAMES[i]: round(float(probabilities[i]) * 100, 2)
+    probabilities = {
+        CLASS_NAMES[i]: round(float(prediction[i]) * 100, 2)
         for i in range(len(CLASS_NAMES))
     }
 
+    end = time.time()
+
     return {
-        "prediction": prediction,
-        "confidence": round(confidence, 2),
-        "probabilities": probability_dict
+        "prediction": predicted_class,
+        "confidence": round(confidence * 100, 2),
+        "probabilities": probabilities,
+        "processing_time_ms": round((end - start) * 1000, 2)
     }
