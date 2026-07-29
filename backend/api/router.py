@@ -1,9 +1,11 @@
 from fastapi import APIRouter, UploadFile, File
+from backend.utils.prediction_logger import save_prediction_log
 import tensorflow as tf
 from pathlib import Path
 import shutil
 from fastapi import HTTPException
-import os
+import uuid
+from datetime import datetime
 
 from backend.app.model_loader import model
 from backend.app.predictor import predict_image
@@ -21,8 +23,10 @@ from backend.app.config import (
 )
 
 router = APIRouter()
+
 UPLOAD_DIR = Path("backend/uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
+
 
 # ==========================
 # Home Endpoint
@@ -72,11 +76,17 @@ def model_info():
         "classes": CLASS_NAMES
     }
 
+
 # ==========================
 # Predict Endpoint
 # ==========================
 
-@router.post("/predict", response_model=PredictionResponse)
+@router.post(
+    "/predict",
+    response_model=PredictionResponse,
+    summary="Predict Skin Disease",
+    description="Upload a skin image (JPG, JPEG or PNG) and receive the predicted skin condition, confidence score, class probabilities, model version and processing time."
+)
 async def predict(file: UploadFile = File(...)):
 
     # Allowed image types
@@ -90,15 +100,26 @@ async def predict(file: UploadFile = File(...)):
             detail="Only JPG, JPEG and PNG images are allowed."
         )
 
-    file_path = UPLOAD_DIR / file.filename
+    # Generate unique filename
+    filename = (
+        f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_"
+        f"{uuid.uuid4().hex[:8]}"
+        f"{extension}"
+    )
+
+    file_path = UPLOAD_DIR / filename
 
     try:
-        # Save uploaded file
+        # Save uploaded image
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # Run prediction
+        # Predict
         result = predict_image(str(file_path))
+        save_prediction_log(
+            image_name=filename,
+            result=result
+        )
 
         return result
 
@@ -107,7 +128,3 @@ async def predict(file: UploadFile = File(...)):
             status_code=500,
             detail=str(e)
         )
-
-    finally:
-        if file_path.exists():
-            os.remove(file_path)
