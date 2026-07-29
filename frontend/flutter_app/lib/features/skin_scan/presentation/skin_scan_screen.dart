@@ -510,6 +510,7 @@ class _ResultView extends StatelessWidget {
                   final label = formatClassName(entry.key);
                   final prob = entry.value;
                   final isTop = entry.key.toLowerCase() == result.prediction.toLowerCase();
+                  final isDark = theme.brightness == Brightness.dark;
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
@@ -524,7 +525,7 @@ class _ResultView extends StatelessWidget {
                               style: TextStyle(
                                 fontWeight: isTop ? FontWeight.w700 : FontWeight.w500,
                                 fontSize: 13,
-                                color: isTop ? AppColors.purple : AppColors.ink,
+                                color: isTop ? AppColors.purple : (isDark ? Colors.white : AppColors.ink),
                               ),
                             ),
                             Text(
@@ -532,7 +533,7 @@ class _ResultView extends StatelessWidget {
                               style: TextStyle(
                                 fontWeight: isTop ? FontWeight.w700 : FontWeight.w500,
                                 fontSize: 12.5,
-                                color: isTop ? AppColors.purple : AppColors.muted,
+                                color: isTop ? AppColors.purple : (isDark ? Colors.white70 : AppColors.muted),
                               ),
                             ),
                           ],
@@ -543,9 +544,9 @@ class _ResultView extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: prob / 100,
                             minHeight: 6,
-                            backgroundColor: const Color(0xFFF5EEF7),
+                            backgroundColor: isDark ? AppColors.lineDark : const Color(0xFFF5EEF7),
                             valueColor: AlwaysStoppedAnimation(
-                              isTop ? AppColors.purple : AppColors.mutedLight,
+                              isTop ? AppColors.purple : (isDark ? Colors.white24 : AppColors.mutedLight),
                             ),
                           ),
                         ),

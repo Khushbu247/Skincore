@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/di/providers.dart';
 import '../../../core/theme/app_colors.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final user = ref.watch(authStateProvider).value;
+    final displayName = user?.displayName ?? 'Riya';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'R';
+
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.only(bottom: 100),
@@ -22,13 +28,13 @@ class HomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Good morning', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.muted)),
-                    Text('Riya ✨', style: theme.textTheme.titleLarge),
+                    Text('$displayName ✨', style: theme.textTheme.titleLarge),
                   ],
                 ),
                 CircleAvatar(
                   radius: 21,
                   backgroundColor: AppColors.purple,
-                  child: const Text('R', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  child: Text(initial, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                 ),
               ],
             ),

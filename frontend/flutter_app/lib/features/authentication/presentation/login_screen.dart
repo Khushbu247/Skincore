@@ -27,7 +27,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      final email = _emailCtrl.text.trim();
+      final email = _emailCtrl.text.trim().toLowerCase();
       final password = _passwordCtrl.text;
 
       // Simulated login delay
@@ -55,8 +55,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final auth = ref.read(firebaseAuthProvider);
       if (auth == null) {
-        await Future.delayed(const Duration(milliseconds: 600));
-        if (mounted) context.goNamed('home');
+        setState(() => _error = 'Firebase is not initialized. Check your setup.');
         return;
       }
       final googleUser = await GoogleSignIn().signIn();
@@ -67,10 +66,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         idToken: googleAuth.idToken,
       );
       await auth.signInWithCredential(credential);
+      if (mounted) context.goNamed('home');
     } on FirebaseAuthException catch (e) {
       setState(() => _error = e.message ?? 'Google sign-in failed.');
-    } catch (_) {
-      if (mounted) context.goNamed('home');
+    } catch (e) {
+      setState(() => _error = 'An error occurred during Google Sign-in.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -150,10 +150,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: _loading ? null : _loginWithGoogle,
-                icon: const Icon(Icons.g_mobiledata_rounded, size: 22),
-                label: const Text('Continue with Google'),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: _loading ? null : _loginWithGoogle,
+                  icon: const Icon(Icons.g_mobiledata_rounded, size: 22),
+                  label: const Text('Continue with Google'),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
               Center(

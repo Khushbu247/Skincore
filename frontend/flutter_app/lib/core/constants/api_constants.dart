@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class ApiConstants {
   // Use 127.0.0.1 for both Web and Physical Android Devices.
   // CRITICAL: For physical Android devices, you MUST run this command in terminal first:

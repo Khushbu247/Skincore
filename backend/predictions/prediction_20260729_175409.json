@@ -1,0 +1,15 @@
+{
+    "timestamp": "2026-07-29 17:54:09",
+    "image": "20260729_175409_450cd53d.jpg",
+    "prediction": "pigmentation",
+    "confidence": 89.2,
+    "probabilities": {
+        "acne": 1.21,
+        "eczema_rash": 1.48,
+        "pigmentation": 89.2,
+        "serious_condition": 8.11
+    },
+    "processing_time_ms": 196.23,
+    "model_version": "1.0.0",
+    "image_size": "224x224"
+}
