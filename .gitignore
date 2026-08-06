@@ -21,3 +21,24 @@ frontend/flutter_app/.packages
 # OS files
 .DS_Store
 Thumbs.db
+
+# Backend generated files
+backend/uploads/
+backend/predictions/
+
+# Environment
+.env
+
+
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+
+# Flutter
+.dart_tool/
+build/
+
+# IDE
+.idea/
+.vscode/
