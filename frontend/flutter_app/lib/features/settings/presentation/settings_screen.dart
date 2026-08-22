@@ -21,14 +21,47 @@ class SettingsScreen extends ConsumerWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: AppColors.purple,
-                  child: Text(
-                    (user?.email ?? 'R').substring(0, 1).toUpperCase(),
-                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
-                  ),
+              CircleAvatar(
+  radius: 30,
+  backgroundColor: AppColors.purple,
+  child: user?.photoURL?.isNotEmpty == true
+      ? ClipOval(
+          child: Image.network(
+            user!.photoURL!,
+            width: 60,
+            height: 60,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Text(
+                (user?.displayName?.isNotEmpty == true
+                        ? user!.displayName![0]
+                        : user?.email?.isNotEmpty == true
+                            ? user!.email![0]
+                            : 'V')
+                    .toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
                 ),
+              );
+            },
+          ),
+        )
+      : Text(
+          (user?.displayName?.isNotEmpty == true
+                  ? user!.displayName![0]
+                  : user?.email?.isNotEmpty == true
+                      ? user!.email![0]
+                      : 'V')
+              .toUpperCase(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+),
                 const SizedBox(width: 14),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
