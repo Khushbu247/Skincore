@@ -577,7 +577,7 @@ class _ResultView extends StatelessWidget {
           const SizedBox(height: 20),
           GradientButton(
             label: 'View Personalized Recommendations',
-            onPressed: () => context.pushNamed('recommendations'),
+            onPressed: () => context.pushNamed('recommendations', extra: result.prediction),
           ),
           const SizedBox(height: 10),
           OutlinedButton(

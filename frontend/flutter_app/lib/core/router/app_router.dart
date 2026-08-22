@@ -120,7 +120,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/recommendations',
         name: 'recommendations',
-        builder: (context, state) => const RecommendationsScreen(),
+        builder: (context, state) {
+          final prediction = state.extra as String? ?? 'acne';
+          return RecommendationsScreen(prediction: prediction);
+        },
       ),
 
       // Dashboard

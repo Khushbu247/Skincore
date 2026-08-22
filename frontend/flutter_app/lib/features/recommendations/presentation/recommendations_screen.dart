@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 
 class RecommendationsScreen extends StatefulWidget {
-  const RecommendationsScreen({super.key});
+  final String prediction;
+
+  const RecommendationsScreen({super.key, this.prediction = 'acne'});
 
   @override
   State<RecommendationsScreen> createState() => _RecommendationsScreenState();
@@ -14,21 +16,72 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
   int _tab = 0;
   final _tabs = const ['Morning', 'Night', 'Weekly'];
 
-  final _routineSteps = const {
-    'Morning': [
-      _Step('Salicylic acid cleanser', 'Step 1 · Unclogs pores', Icons.water_drop_rounded),
-      _Step('Niacinamide 5% serum', 'Step 2 · Oil control', Icons.opacity_rounded),
-      _Step('SPF 50+ sunscreen', 'Step 3 · Non-negotiable', Icons.wb_sunny_rounded),
-    ],
-    'Night': [
-      _Step('Gentle cleanser', 'Step 1 · Removes buildup', Icons.water_drop_rounded),
-      _Step('Benzoyl peroxide spot treatment', 'Step 2 · Targeted care', Icons.healing_rounded),
-      _Step('Ceramide moisturizer', 'Step 3 · Barrier repair', Icons.spa_rounded),
-    ],
-    'Weekly': [
-      _Step('Gentle exfoliant', '1-2x/week only', Icons.auto_awesome_rounded),
-    ],
-  };
+  Map<String, List<_Step>> get _routineSteps {
+    final condition = widget.prediction.toLowerCase();
+    
+    if (condition.contains('serious')) {
+      return {
+        'Morning': const [
+          _Step('Consult Doctor', 'Please schedule an appointment with a dermatologist', Icons.local_hospital_rounded),
+        ],
+        'Night': const [
+          _Step('Consult Doctor', 'Please schedule an appointment with a dermatologist', Icons.local_hospital_rounded),
+        ],
+        'Weekly': const [
+          _Step('Consult Doctor', 'Avoid self-treatment and see a professional', Icons.local_hospital_rounded),
+        ],
+      };
+    } else if (condition.contains('eczema') || condition.contains('rash')) {
+      return {
+        'Morning': const [
+          _Step('Gentle oat cleanser', 'Step 1 · Soothes skin', Icons.water_drop_rounded),
+          _Step('Ceramide barrier cream', 'Step 2 · Locks in moisture', Icons.spa_rounded),
+          _Step('Mineral SPF 50+', 'Step 3 · Gentle sun protection', Icons.wb_sunny_rounded),
+        ],
+        'Night': const [
+          _Step('Hydrating milk cleanser', 'Step 1 · Removes impurities', Icons.water_drop_rounded),
+          _Step('Colloidal oatmeal treatment', 'Step 2 · Calms redness', Icons.healing_rounded),
+          _Step('Rich repair ointment', 'Step 3 · Deep hydration', Icons.spa_rounded),
+        ],
+        'Weekly': const [
+          _Step('Cooling aloe mask', '1-2x/week · Reduces inflammation', Icons.auto_awesome_rounded),
+        ],
+      };
+    } else if (condition.contains('pigmentation')) {
+      return {
+        'Morning': const [
+          _Step('Brightening gel cleanser', 'Step 1 · Refreshes skin', Icons.water_drop_rounded),
+          _Step('Vitamin C 15% serum', 'Step 2 · Fades dark spots', Icons.wb_twilight_rounded),
+          _Step('Tinted SPF 50+ sunscreen', 'Step 3 · Prevents darkening', Icons.wb_sunny_rounded),
+        ],
+        'Night': const [
+          _Step('Double cleanse (Oil + Foam)', 'Step 1 · Thorough clean', Icons.water_drop_rounded),
+          _Step('Niacinamide / Alpha Arbutin', 'Step 2 · Evens skin tone', Icons.opacity_rounded),
+          _Step('Night repair cream', 'Step 3 · Cell turnover', Icons.spa_rounded),
+        ],
+        'Weekly': const [
+          _Step('AHA/BHA exfoliating peel', '1x/week · Removes dead skin', Icons.auto_awesome_rounded),
+        ],
+      };
+    } else {
+      // Default to Acne routine
+      return {
+        'Morning': const [
+          _Step('Salicylic acid cleanser', 'Step 1 · Unclogs pores', Icons.water_drop_rounded),
+          _Step('Niacinamide 5% serum', 'Step 2 · Oil control', Icons.opacity_rounded),
+          _Step('SPF 50+ sunscreen', 'Step 3 · Non-negotiable', Icons.wb_sunny_rounded),
+        ],
+        'Night': const [
+          _Step('Gentle cleanser', 'Step 1 · Removes buildup', Icons.water_drop_rounded),
+          _Step('Benzoyl peroxide spot treatment', 'Step 2 · Targeted care', Icons.healing_rounded),
+          _Step('Ceramide moisturizer', 'Step 3 · Barrier repair', Icons.spa_rounded),
+        ],
+        'Weekly': const [
+          _Step('Gentle exfoliant', '1-2x/week only', Icons.auto_awesome_rounded),
+        ],
+      };
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
