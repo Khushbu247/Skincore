@@ -7,6 +7,7 @@ class ApiConstants {
   }
 
   static const String predictEndpoint = '/predict';
+  static const String chatbotEndpoint = '/chatbot/message';
 
   static const int connectTimeout = 15000; // 15 seconds
   static const int receiveTimeout = 15000; // 15 seconds

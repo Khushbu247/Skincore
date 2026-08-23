@@ -23,3 +23,19 @@ class ModelInfoResponse(BaseModel):
     architecture: str
     image_size: List[int]
     classes: List[str]
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+    history: List[ChatMessage] = []
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    status: str = "success"
+    model_used: str = "groq-llama"

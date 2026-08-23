@@ -12,8 +12,11 @@ from backend.app.predictor import predict_image
 from backend.app.schemas import (
     PredictionResponse,
     HealthResponse,
-    ModelInfoResponse
+    ModelInfoResponse,
+    ChatRequest,
+    ChatResponse
 )
+from backend.app.chatbot_service import get_chatbot_response
 from backend.app.config import (
     MODEL_NAME,
     MODEL_VERSION,
@@ -43,7 +46,8 @@ def home():
         "status": "Running",
         "documentation": "/docs",
         "health_check": "/health",
-        "model_info": "/model-info"
+        "model_info": "/model-info",
+        "chatbot": "/chatbot/message"
     }
 
 
@@ -128,3 +132,29 @@ async def predict(file: UploadFile = File(...)):
             status_code=500,
             detail=str(e)
         )
+
+
+# ==========================
+# Chatbot Endpoint
+# ==========================
+
+@router.post(
+    "/chatbot/message",
+    response_model=ChatResponse,
+    summary="SkinCore AI Chatbot",
+    description="Ask daily skincare, skin disease, and SkinCore app questions to the Groq-powered AI assistant."
+)
+@router.post("/api/v1/chatbot/message", response_model=ChatResponse, include_in_schema=False)
+async def chatbot_message(request: ChatRequest):
+    if not request.message or not request.message.strip():
+        raise HTTPException(status_code=400, detail="Message content cannot be empty.")
+
+    history_dicts = [{"role": msg.role, "content": msg.content} for msg in request.history] if request.history else []
+
+    reply, model_used = get_chatbot_response(request.message.strip(), history=history_dicts)
+
+    return ChatResponse(
+        reply=reply,
+        status="success",
+        model_used=model_used
+    )
