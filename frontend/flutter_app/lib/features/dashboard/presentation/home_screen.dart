@@ -101,6 +101,11 @@ class HomeScreen extends ConsumerWidget {
                   : _OnboardingQuestionnaireBanner(),
             ),
 
+            const SizedBox(height: 20),
+
+            // Myth of the Day Card (Below Questionnaire Card & Above Other Widgets)
+            const _MythOfTheDaySection(),
+
             const SizedBox(height: 24),
 
             // Section 1: Quick Action Widget Cards (Skin Analysis + Medical Reports + AI Chat + Routine)
@@ -244,11 +249,6 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
             ),
-
-            const SizedBox(height: 24),
-
-            // Section 4: Skincare Myth of the Day
-            const _MythOfTheDaySection(),
           ],
         ),
       ),

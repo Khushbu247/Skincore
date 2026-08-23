@@ -102,19 +102,15 @@ class QuestionnaireNotifier extends StateNotifier<QuestionnaireState> {
 
     await _service.saveQuestionnaireResponse(uid: activeUid, answers: answers);
 
-    // Save report under name "Skin Understanding" in reportsProvider & Firebase Firestore
+    // Save/Replace single "Skin Understanding" report in reportsProvider & Firebase Firestore
     final now = DateTime.now();
-    final dateStr = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
-    final randStr = (now.millisecondsSinceEpoch % 10000).toString().padLeft(4, '0');
-    final reportId = 'SKIN-UND-$dateStr-$randStr';
-
     final customReport = MedicalReport.fromQuestionnaire(
-      id: reportId,
+      id: 'SKIN-UND-PROFILE',
       dateTime: now,
       answers: answers,
     );
 
-    await _ref.read(reportsProvider.notifier).saveCustomReport(customReport);
+    await _ref.read(reportsProvider.notifier).replaceQuestionnaireReport(customReport);
 
     state = QuestionnaireState(
       isLoading: false,

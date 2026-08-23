@@ -92,7 +92,34 @@ class ReportsNotifier extends StateNotifier<List<MedicalReport>> {
     state = [report, ...state.where((r) => r.id != report.id)];
   }
 
+  Future<void> replaceQuestionnaireReport(MedicalReport newReport) async {
+    final uid = _ref.read(activeUserIdProvider);
+    final existingQuestionnaireReports = state.where((r) =>
+        r.reportType == 'questionnaire' ||
+        r.prediction == 'Skin Understanding' ||
+        r.id.startsWith('SKIN-UND')).toList();
+
+    for (final oldReport in existingQuestionnaireReports) {
+      await _storage.deleteReport(uid: uid, reportId: oldReport.id);
+    }
+
+    await _storage.saveReport(uid: uid, report: newReport);
+
+    final nonQuestionnaireReports = state.where((r) =>
+        r.reportType != 'questionnaire' &&
+        r.prediction != 'Skin Understanding' &&
+        !r.id.startsWith('SKIN-UND')).toList();
+
+    state = [newReport, ...nonQuestionnaireReports];
+  }
+
   Future<void> saveCustomReport(MedicalReport report) async {
+    if (report.reportType == 'questionnaire' ||
+        report.prediction == 'Skin Understanding' ||
+        report.id.startsWith('SKIN-UND')) {
+      await replaceQuestionnaireReport(report);
+      return;
+    }
     final uid = _ref.read(activeUserIdProvider);
     await _storage.saveReport(uid: uid, report: report);
     state = [report, ...state.where((r) => r.id != report.id && r.prediction != report.prediction)];
