@@ -9,6 +9,7 @@ import '../../../core/di/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../../models/prediction_result.dart';
+import '../../../../providers/reports_provider.dart';
 
 enum ScanStage { capture, preview, analyzing, result }
 
@@ -105,6 +106,12 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
       final apiService = ref.read(apiServiceProvider);
       final result = await apiService.predictSkinCondition(_imageFile!);
       await stepTimer.cancel();
+
+      // Automatically save report to Track History
+      await ref.read(reportsProvider.notifier).addReportFromPrediction(
+            imagePath: _imageFile!.path,
+            result: result,
+          );
 
       if (mounted) {
         setState(() {
@@ -578,6 +585,12 @@ class _ResultView extends StatelessWidget {
           GradientButton(
             label: 'View Personalized Recommendations',
             onPressed: () => context.pushNamed('recommendations', extra: result.prediction),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: () => context.goNamed('progress'),
+            icon: const Icon(Icons.assignment_outlined, size: 18),
+            label: const Text('View Medical Report in Track History'),
           ),
           const SizedBox(height: 10),
           OutlinedButton(

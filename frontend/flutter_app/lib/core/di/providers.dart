@@ -28,6 +28,26 @@ final authStateProvider = StreamProvider<User?>((ref) {
   return Stream.value(null);
 });
 
+/// Active User Email state provider
+final activeUserEmailProvider = StateProvider<String?>((ref) {
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return prefs.getString('active_user_email') ?? 'user1@test.com';
+});
+
+/// Centralized User ID Provider (works seamlessly with Firebase Auth & email sessions)
+final activeUserIdProvider = Provider<String>((ref) {
+  final firebaseUser = ref.watch(authStateProvider).value;
+  if (firebaseUser != null && firebaseUser.uid.isNotEmpty) {
+    return firebaseUser.uid;
+  }
+  final email = ref.watch(activeUserEmailProvider);
+  if (email != null && email.isNotEmpty) {
+    final sanitized = email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+    return 'user_$sanitized';
+  }
+  return 'user_demo_default';
+});
+
 /// Local storage provider
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('Overridden in main() after SharedPreferences.getInstance()');
@@ -50,7 +70,6 @@ class OnboardingController extends Notifier<bool> {
 final onboardingControllerProvider = NotifierProvider<OnboardingController, bool>(
   OnboardingController.new,
 );
-
 
 /// Theme mode controller
 class ThemeModeController extends Notifier<ThemeMode> {

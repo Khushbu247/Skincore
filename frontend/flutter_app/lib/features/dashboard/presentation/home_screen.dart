@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/di/providers.dart';
+import '../../../core/services/myth_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../models/medical_report.dart';
+import '../../../providers/questionnaire_provider.dart';
+import '../../../providers/reports_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -15,137 +20,321 @@ class HomeScreen extends ConsumerWidget {
     final displayName = user?.displayName ?? 'Riya';
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'R';
 
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.only(bottom: 100),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Good morning', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.muted)),
-                    Text('$displayName ✨', style: theme.textTheme.titleLarge),
-                  ],
-                ),
-                CircleAvatar(
-                  radius: 21,
-                  backgroundColor: AppColors.purple,
-                  child: Text(initial, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Row(
-                  children: [
-                    const _SkinScoreRing(score: 76),
-                    const SizedBox(width: 18),
-                    Expanded(
-                      child: Column(
+    final reports = ref.watch(reportsProvider);
+    final isReturningUser = ref.watch(isReturningUserProvider) || reports.length > 1;
+
+    final questionnaireState = ref.watch(questionnaireProvider);
+    final latestReport = reports.isNotEmpty ? reports.first : null;
+
+    return Scaffold(
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 100),
+          children: [
+            // Top App Bar Header with Drawer Toggle
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 20, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.menu_rounded, size: 26),
+                        onPressed: () {
+                          Scaffold.of(context).openDrawer();
+                        },
+                        tooltip: 'Open Side Menu',
+                      ),
+                      const SizedBox(width: 4),
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('TODAY\'S SKIN SCORE',
-                              style: theme.textTheme.labelSmall?.copyWith(color: AppColors.rose, fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 6),
-                          Text('Up 4 pts this week — hydration is paying off.',
-                              style: theme.textTheme.bodySmall?.copyWith(color: AppColors.muted, height: 1.4)),
+                          Text(
+                            isReturningUser ? 'WELCOME BACK 👋' : 'WELCOME TO SKINCORE ✨',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppColors.purple,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            displayName,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                         ],
+                      ),
+                    ],
+                  ),
+                  GestureDetector(
+                    onTap: () => Scaffold.of(context).openDrawer(),
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: AppColors.purple,
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // Top Hero Card: Questionnaire Banner (Replaces old scan section at the top)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: questionnaireState.isCompleted
+                  ? _CompletedQuestionnaireCard(
+                      skinType: questionnaireState.skinType,
+                      mainConcern: questionnaireState.mainConcern,
+                    )
+                  : _OnboardingQuestionnaireBanner(),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Section 1: Quick Action Widget Cards (Skin Analysis + Medical Reports + AI Chat + Routine)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _QuickActionCard(
+                      icon: Icons.center_focus_strong_rounded,
+                      title: 'AI Skin Scan',
+                      subtitle: '30s Diagnostics',
+                      badge: 'AI',
+                      color: AppColors.rose,
+                      onTap: () => context.pushNamed('scan'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _QuickActionCard(
+                      icon: Icons.assignment_outlined,
+                      title: 'Medical Reports',
+                      subtitle: '${reports.length} Saved',
+                      badge: 'PDF',
+                      color: AppColors.purple,
+                      onTap: () => context.goNamed('progress'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _QuickActionCard(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      title: 'AI Assistant',
+                      subtitle: 'Skin Consultant',
+                      color: const Color(0xFFE9497A),
+                      onTap: () => context.goNamed('chat'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _QuickActionCard(
+                      icon: Icons.spa_outlined,
+                      title: 'Skincare Routine',
+                      subtitle: 'Personalized',
+                      color: const Color(0xFFF4915E),
+                      onTap: () => context.pushNamed('recommendations'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Section 2: Latest Medical Report Quick Widget (if available)
+            if (latestReport != null) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Latest Medical Report', style: theme.textTheme.titleMedium),
+                    GestureDetector(
+                      onTap: () => context.goNamed('progress'),
+                      child: Text(
+                        'View All (${reports.length})',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.purple,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () => context.pushNamed('scan'),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(gradient: AppColors.brandGradient, borderRadius: BorderRadius.circular(22)),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _LatestReportCard(report: latestReport),
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            // Section 3: Today's Routine Checklist Widget
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Quick Skin Scan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
-                      SizedBox(height: 4),
-                      Text('Get an instant AI read in 30s', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    ],
-                  ),
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.22), borderRadius: BorderRadius.circular(14)),
-                    child: const Icon(Icons.center_focus_strong_rounded, color: Colors.white),
+                  Text('Your Daily Skincare Routine', style: theme.textTheme.titleMedium),
+                  GestureDetector(
+                    onTap: () => context.pushNamed('recommendations'),
+                    child: Text(
+                      'Customize',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.purple,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Your routine · Today', style: theme.textTheme.titleMedium),
-                GestureDetector(
-                  onTap: () => context.goNamed('progress'),
-                  child: Text('See all', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.purple, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Column(
+                    children: const [
+                      _RoutineRow(
+                        title: 'Gentle Cleanser',
+                        subtitle: 'Morning · Cleanse skin surface',
+                        time: '7:30 AM',
+                        done: true,
+                      ),
+                      Divider(height: 1),
+                      _RoutineRow(
+                        title: 'Broad-Spectrum SPF 50',
+                        subtitle: 'Morning · Sun protection',
+                        time: '7:35 AM',
+                        done: true,
+                      ),
+                      Divider(height: 1),
+                      _RoutineRow(
+                        title: 'Niacinamide Serum',
+                        subtitle: 'Night · Barrier repair & oil balance',
+                        time: '9:00 PM',
+                        done: false,
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
+
+            const SizedBox(height: 24),
+
+            // Section 4: Skincare Myth of the Day
+            const _MythOfTheDaySection(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OnboardingQuestionnaireBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: AppColors.brandGradient,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.rose.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: Column(
-                  children: const [
-                    _RoutineRow(title: 'Gentle cleanser', subtitle: 'Morning · 2 min', time: '7:30 AM', done: true),
-                    Divider(height: 1),
-                    _RoutineRow(title: 'SPF 50 sunscreen', subtitle: 'Morning · Reapply 2pm', time: '7:35 AM', done: true),
-                    Divider(height: 1),
-                    _RoutineRow(title: 'Niacinamide serum', subtitle: 'Night · 5 min', time: '9:00 PM', done: false),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.assignment_turned_in_rounded, color: Colors.white, size: 14),
+                    SizedBox(width: 6),
+                    Text(
+                      'Account Setup Required',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
+              const Icon(Icons.arrow_forward_rounded, color: Colors.white70, size: 20),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Help us understand your skin and concerns better',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18.5,
+              fontWeight: FontWeight.bold,
+              height: 1.3,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
-            child: Text('Myth of the day', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 6),
+          const Text(
+            'Complete 12 quick questions to personalize your diagnostic recommendations & routine.',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 12.5,
+              height: 1.4,
+            ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: const LinearGradient(colors: [Color(0xFF2B1533), Color(0xFF7A3B93)]),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('"Oily skin doesn\'t need moisturizer."',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
-                  SizedBox(height: 8),
-                  Text(
-                    'False — skipping it can trigger more oil production. Lightweight, non-comedogenic formulas help balance skin.',
-                    style: TextStyle(color: Colors.white70, fontSize: 12.5, height: 1.5),
-                  ),
-                ],
-              ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () => context.pushNamed('questionnaire'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.purple,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              elevation: 0,
+            ),
+            icon: const Icon(Icons.quiz_outlined, size: 18),
+            label: const Text(
+              'Start Questionnaire',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
             ),
           ),
         ],
@@ -154,37 +343,309 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _SkinScoreRing extends StatelessWidget {
-  final int score;
-  const _SkinScoreRing({required this.score});
+class _CompletedQuestionnaireCard extends StatelessWidget {
+  final String skinType;
+  final String mainConcern;
+
+  const _CompletedQuestionnaireCard({
+    required this.skinType,
+    required this.mainConcern,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 92,
-      height: 92,
-      child: Stack(
-        alignment: Alignment.center,
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: AppColors.purple.withValues(alpha: 0.3),
+          width: 1.4,
+        ),
+      ),
+      child: Row(
         children: [
-          SizedBox(
-            width: 92,
-            height: 92,
-            child: CircularProgressIndicator(
-              value: score / 100,
-              strokeWidth: 9,
-              backgroundColor: const Color(0xFFF0E8F2),
-              valueColor: const AlwaysStoppedAnimation(AppColors.rose),
-              strokeCap: StrokeCap.round,
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: AppColors.brandGradient,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.verified_user_rounded, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'SKIN PROFILE COMPLETED',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppColors.purple,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => context.goNamed('progress'),
+                      child: const Text(
+                        'View in Reports',
+                        style: TextStyle(
+                          color: AppColors.purple,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$skinType Skin · $mainConcern',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('$score', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-              Text('SCORE', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.muted)),
-            ],
-          ),
         ],
+      ),
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String? badge;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.badge,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isDark ? AppColors.lineDark : AppColors.lineLight,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (badge != null) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            badge!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LatestReportCard extends StatelessWidget {
+  final MedicalReport report;
+  const _LatestReportCard({required this.report});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isSerious = report.prediction.toLowerCase().contains('serious');
+    final formattedDate = DateFormat('MMM dd, yyyy · hh:mm a').format(report.dateTime);
+
+    String formatClassName(String raw) {
+      switch (raw.toLowerCase()) {
+        case 'acne':
+          return 'Acne Vulgaris';
+        case 'eczema_rash':
+        case 'eczema/rash':
+          return 'Eczema / Rash';
+        case 'pigmentation':
+          return 'Pigmentation';
+        case 'serious_condition':
+          return 'Serious Condition Alert';
+        default:
+          return raw.replaceAll('_', ' ').toUpperCase();
+      }
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: (isSerious ? AppColors.danger : AppColors.purple).withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isSerious ? Icons.warning_amber_rounded : Icons.verified_rounded,
+                        color: isSerious ? AppColors.danger : AppColors.purple,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          report.id,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          formattedDate,
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: (isSerious ? AppColors.danger : AppColors.purple).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    '${report.confidence.toStringAsFixed(1)}% match',
+                    style: TextStyle(
+                      color: isSerious ? AppColors.danger : AppColors.purple,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  formatClassName(report.prediction),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isSerious ? AppColors.danger : null,
+                  ),
+                ),
+                Text(
+                  report.riskLevel,
+                  style: TextStyle(
+                    color: isSerious ? AppColors.danger : AppColors.success,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => context.goNamed('progress'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 38),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              icon: const Icon(Icons.remove_red_eye_outlined, size: 16),
+              label: const Text('View & Download Medical Report'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -196,7 +657,12 @@ class _RoutineRow extends StatefulWidget {
   final String time;
   final bool done;
 
-  const _RoutineRow({required this.title, required this.subtitle, required this.time, required this.done});
+  const _RoutineRow({
+    required this.title,
+    required this.subtitle,
+    required this.time,
+    required this.done,
+  });
 
   @override
   State<_RoutineRow> createState() => _RoutineRowState();
@@ -218,7 +684,10 @@ class _RoutineRowState extends State<_RoutineRow> {
               height: 22,
               decoration: BoxDecoration(
                 color: done ? AppColors.success : Colors.transparent,
-                border: Border.all(color: done ? AppColors.success : AppColors.mutedLight, width: 1.6),
+                border: Border.all(
+                  color: done ? AppColors.success : AppColors.mutedLight,
+                  width: 1.6,
+                ),
                 borderRadius: BorderRadius.circular(7),
               ),
               child: done ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
@@ -229,14 +698,154 @@ class _RoutineRowState extends State<_RoutineRow> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
-                Text(widget.subtitle, style: TextStyle(color: AppColors.muted, fontSize: 11.5)),
+                Text(
+                  widget.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13.5,
+                    decoration: done ? TextDecoration.lineThrough : null,
+                    color: done ? AppColors.muted : null,
+                  ),
+                ),
+                Text(
+                  widget.subtitle,
+                  style: TextStyle(color: AppColors.muted, fontSize: 11.5),
+                ),
               ],
             ),
           ),
-          Text(widget.time, style: TextStyle(color: AppColors.mutedLight, fontSize: 11)),
+          Text(
+            widget.time,
+            style: TextStyle(color: AppColors.mutedLight, fontSize: 11),
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _MythOfTheDaySection extends ConsumerWidget {
+  const _MythOfTheDaySection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final mythAsync = ref.watch(mythOfTheDayProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Myth of the Day', style: theme.textTheme.titleMedium),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.purple.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.auto_awesome_rounded, size: 12, color: AppColors.purple),
+                    SizedBox(width: 4),
+                    Text(
+                      'Daily Fact Check',
+                      style: TextStyle(color: AppColors.purple, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF2B1533), Color(0xFF7A3B93)],
+              ),
+            ),
+            child: mythAsync.when(
+              data: (myth) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.lightbulb_rounded, color: AppColors.gold, size: 22),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          '"${myth.myth}"',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14.5,
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.check_circle_outline_rounded, color: AppColors.coral, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Truth: ${myth.truth}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+              ),
+              error: (err, stack) => const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '"Oily skin doesn\'t need moisturizer."',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14.5),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Truth: Oily and acne-prone skin still benefits from lightweight, non-comedogenic moisturizers to prevent over-secretion of oil.',
+                    style: TextStyle(color: Colors.white70, fontSize: 12.5),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

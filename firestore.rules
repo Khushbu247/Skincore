@@ -1,0 +1,12 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User root document and all subcollections (questionnaire, reports, etc.)
+    match /users/{userId}/{document=**} {
+      // Authenticated users can read and write only their own data
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+  }
+}

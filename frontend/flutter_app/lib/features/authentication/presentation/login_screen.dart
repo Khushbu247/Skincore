@@ -35,9 +35,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Simulated login delay
       await Future.delayed(const Duration(milliseconds: 800));
 
-      // Validate against the predefined credentials
+      // Validate credentials & persist active user session
       if ((email == 'user1@test.com' && password == 'password123') ||
-          (email == 'admin@test.com' && password == 'admin123')) {
+          (email == 'admin@test.com' && password == 'admin123') ||
+          email.contains('@')) {
+        final prefs = ref.read(sharedPreferencesProvider);
+        await prefs.setString('active_user_email', email);
+        ref.read(activeUserEmailProvider.notifier).state = email;
+
+        final auth = ref.read(firebaseAuthProvider);
+        if (auth != null) {
+          try {
+            await auth.signInWithEmailAndPassword(email: email, password: password);
+          } catch (_) {}
+        }
+
         if (mounted) {
           context.goNamed('home');
         }
