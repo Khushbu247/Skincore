@@ -51,19 +51,26 @@ SkinCore is a state-of-the-art mobile and web application designed to empower us
 
 ---
 
-### 🔔 5. Smart Notifications
+### 📝 5. Skin Understanding Questionnaire
+- **12 Personalization Questions**: Captures detailed user inputs regarding skin type (Oily, Dry, Combination, Sensitive, Normal), primary skin concerns, environmental exposure, and skincare habits.
+- **Automated Medical Profile Generation**: Automatically generates a structured **"Skin Understanding" Profile (`SKIN-UND-PROFILE`)** saved directly to the user's medical history & tabular reports.
+- **Dynamic Home Page Customization**: Reflects verified skin type and main concerns on the main home dashboard banner upon completion.
+
+---
+
+### 🔔 6. Smart Notifications
 - Integrated under **Settings & Profile** (`Profile → Smart Notifications`).
 - Automatically schedules routine reminders based on the user's saved skincare products and selected times.
 - Persists notification preferences per user across app restarts and logins.
 
 ---
 
-### 💬 6. AI Skin Consultant Chatbot
+### 💬 7. AI Skin Consultant Chatbot
 - Interactive conversational AI assistant for skincare guidance powered by Groq (`llama-3.3-70b-versatile`).
 
 ---
 
-### 🛡️ 7. Privacy & Data Controls
+### 🛡️ 8. Privacy & Data Controls
 - Local storage encryption option for scan history and medical logs.
 - Anonymous diagnostic telemetry controls.
 - Cache clearing and full data export capabilities.
