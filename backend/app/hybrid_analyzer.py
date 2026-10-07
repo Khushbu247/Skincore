@@ -105,9 +105,10 @@ def analyze_hybrid(
         "assessment_state_display": assessment_state_display,
         "skin_type": {
             "estimated_type": groq_result.get("skin_type", "unknown"),
-            "confidence_note": "Visual feature estimation via Groq AI",
-            "source": "groq_vision" if groq_result.get("available") else "none"
+            "confidence_note": "Visual feature estimation via SkinCore AI",
+            "source": "skincore_ai" if groq_result.get("available") else "none"
         },
+
         "groq_analysis": {
             "available": groq_result.get("available", False),
             "visual_description": visual_desc,

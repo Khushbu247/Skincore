@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'prediction_result.dart';
+import 'hybrid_result.dart';
 
 class MedicalReport {
   final String id;
@@ -17,6 +18,14 @@ class MedicalReport {
   final String reportType; // 'scan' or 'questionnaire'
   final Map<String, dynamic>? questionnaireAnswers;
 
+  // Additional Hybrid Fields for Tabular & Detailed Reporting
+  final String? assessmentState;
+  final String? skinType;
+  final String? visualDescription;
+  final List<Map<String, String>>? regionObservations;
+  final List<String>? additionalFindings;
+  final String? safetyMessage;
+
   MedicalReport({
     required this.id,
     required this.dateTime,
@@ -32,7 +41,14 @@ class MedicalReport {
     required this.riskLevel,
     this.reportType = 'scan',
     this.questionnaireAnswers,
+    this.assessmentState,
+    this.skinType,
+    this.visualDescription,
+    this.regionObservations,
+    this.additionalFindings,
+    this.safetyMessage,
   });
+
 
   factory MedicalReport.fromQuestionnaire({
     required String id,
@@ -169,6 +185,99 @@ class MedicalReport {
     );
   }
 
+  factory MedicalReport.fromHybridResult({
+    required String id,
+    required DateTime dateTime,
+    required String imagePath,
+    required HybridResult hybridResult,
+  }) {
+    final isSerious = hybridResult.needsProfessionalReview ||
+        hybridResult.primaryPrediction.condition.toLowerCase().contains('serious');
+    final isNormal = hybridResult.isNormalAppearing;
+    final isUncertain = hybridResult.isUncertain;
+
+    String risk;
+    if (isSerious) {
+      risk = 'High Risk (Clinical Alert)';
+    } else if (isNormal) {
+      risk = 'Low Risk (Normal-Appearing)';
+    } else if (isUncertain) {
+      risk = 'Uncertain Assessment';
+    } else {
+      risk = 'Moderate Risk';
+    }
+
+    List<String> obs = [];
+    if (hybridResult.overallAssessment.isNotEmpty) {
+      obs.add(hybridResult.overallAssessment);
+    }
+
+    if (hybridResult.groqAnalysis.visualDescription.isNotEmpty) {
+      obs.add('Visual Observation: ${hybridResult.groqAnalysis.visualDescription}');
+    }
+
+    for (final reg in hybridResult.groqAnalysis.regionObservations) {
+      obs.add('[${reg.region.toUpperCase()}] ${reg.observation} (Severity: ${reg.severity})');
+    }
+
+    for (final finding in hybridResult.groqAnalysis.additionalFindings) {
+      obs.add('Finding: $finding');
+    }
+
+    List<String> care = [];
+    if (isSerious) {
+      care.addAll([
+        'Consult a board-certified dermatologist immediately for professional medical evaluation.',
+        'Avoid self-medication or applying harsh active chemical products.',
+        'Monitor the targeted area for changes in color, border, size, or sensation.',
+      ]);
+    } else if (isNormal) {
+      care.addAll([
+        'Maintain daily gentle cleansing and moisturizing.',
+        'Apply broad-spectrum SPF 30+ daily to protect healthy skin barrier.',
+        'Re-evaluate if new symptoms or changes develop.',
+      ]);
+    } else if (isUncertain) {
+      care.addAll([
+        'Consider retaking a clear photograph in natural daylight.',
+        'If symptoms persist or cause discomfort, consult a skincare professional.',
+        'Avoid over-exfoliating or applying new unverified skincare products.',
+      ]);
+    } else {
+      care.addAll([
+        'Cleanse daily with a gentle non-comedogenic cleanser suited for ${hybridResult.skinType.estimatedType} skin.',
+        'Apply targeted active treatments for ${hybridResult.primaryPrediction.conditionDisplay}.',
+        'Wear broad-spectrum SPF 30+ daily and keep skin adequately hydrated.',
+      ]);
+    }
+
+    List<Map<String, String>> regObsMaps = hybridResult.groqAnalysis.regionObservations
+        .map((r) => {'region': r.region, 'observation': r.observation, 'severity': r.severity})
+        .toList();
+
+    return MedicalReport(
+      id: id,
+      dateTime: dateTime,
+      imagePath: imagePath,
+      prediction: hybridResult.primaryPrediction.conditionDisplay,
+      confidence: hybridResult.primaryPrediction.confidence,
+      probabilities: hybridResult.probabilities,
+      modelVersion: hybridResult.primaryPrediction.modelVersion,
+      imageSize: hybridResult.processing.imageSize,
+      processingTimeMs: hybridResult.processing.totalTimeMs,
+      keyObservations: obs,
+      recommendedCare: care,
+      riskLevel: risk,
+      reportType: 'scan',
+      assessmentState: hybridResult.assessmentStateDisplay,
+      skinType: hybridResult.skinType.estimatedType,
+      visualDescription: hybridResult.groqAnalysis.visualDescription,
+      regionObservations: regObsMaps,
+      additionalFindings: hybridResult.groqAnalysis.additionalFindings,
+      safetyMessage: hybridResult.safetyMessage,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -185,10 +294,24 @@ class MedicalReport {
       'riskLevel': riskLevel,
       'reportType': reportType,
       'questionnaireAnswers': questionnaireAnswers,
+      'assessmentState': assessmentState,
+      'skinType': skinType,
+      'visualDescription': visualDescription,
+      'regionObservations': regionObservations,
+      'additionalFindings': additionalFindings,
+      'safetyMessage': safetyMessage,
     };
   }
 
   factory MedicalReport.fromJson(Map<String, dynamic> json) {
+    var rawRegs = json['regionObservations'] as List?;
+    List<Map<String, String>>? parsedRegs;
+    if (rawRegs != null) {
+      parsedRegs = rawRegs
+          .map((r) => Map<String, String>.from(Map<String, dynamic>.from(r)))
+          .toList();
+    }
+
     return MedicalReport(
       id: json['id'] ?? '',
       dateTime: DateTime.tryParse(json['dateTime'] ?? '') ?? DateTime.now(),
@@ -207,6 +330,12 @@ class MedicalReport {
       riskLevel: json['riskLevel'] ?? 'Low Risk',
       reportType: json['reportType'] ?? 'scan',
       questionnaireAnswers: json['questionnaireAnswers'] as Map<String, dynamic>?,
+      assessmentState: json['assessmentState'],
+      skinType: json['skinType'],
+      visualDescription: json['visualDescription'],
+      regionObservations: parsedRegs,
+      additionalFindings: json['additionalFindings'] != null ? List<String>.from(json['additionalFindings']) : null,
+      safetyMessage: json['safetyMessage'],
     );
   }
 
@@ -214,3 +343,4 @@ class MedicalReport {
 
   factory MedicalReport.decode(String raw) => MedicalReport.fromJson(jsonDecode(raw));
 }
+

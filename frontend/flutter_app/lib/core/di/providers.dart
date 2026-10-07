@@ -31,7 +31,7 @@ final authStateProvider = StreamProvider<User?>((ref) {
 /// Active User Email state provider
 final activeUserEmailProvider = StateProvider<String?>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
-  return prefs.getString('active_user_email') ?? 'user1@test.com';
+  return prefs.getString('active_user_email');
 });
 
 /// Centralized User ID Provider (works seamlessly with Firebase Auth & email sessions)

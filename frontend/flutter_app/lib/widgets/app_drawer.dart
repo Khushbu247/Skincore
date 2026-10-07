@@ -11,10 +11,13 @@ class AppDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final activeEmail = ref.watch(activeUserEmailProvider);
     final user = ref.watch(authStateProvider).value;
-    final displayName = user?.displayName ?? 'Riya';
-    final email = user?.email ?? 'user1@test.com';
-    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'R';
+    final email = activeEmail ?? user?.email ?? '';
+    final displayName = user?.displayName != null && user!.displayName!.isNotEmpty
+        ? user.displayName!
+        : (email.isNotEmpty ? email.split('@')[0] : 'User');
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
     final themeMode = ref.watch(themeModeProvider);
     final isDark = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system && theme.brightness == Brightness.dark);
@@ -54,7 +57,7 @@ class AppDrawer extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
+                          color: Colors.white.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Row(
@@ -179,7 +182,7 @@ class AppDrawer extends ConsumerWidget {
                 },
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 44),
-                  side: BorderSide(color: AppColors.danger.withOpacity(0.5)),
+                  side: BorderSide(color: AppColors.danger.withValues(alpha: 0.5)),
                   foregroundColor: AppColors.danger,
                 ),
                 icon: const Icon(Icons.logout_rounded, size: 18),
@@ -216,7 +219,7 @@ class _DrawerItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
       decoration: BoxDecoration(
-        color: selected ? AppColors.purple.withOpacity(0.1) : Colors.transparent,
+        color: selected ? AppColors.purple.withValues(alpha: 0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(

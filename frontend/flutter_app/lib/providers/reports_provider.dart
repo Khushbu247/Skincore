@@ -3,6 +3,7 @@ import '../core/di/providers.dart';
 import '../core/services/report_storage_service.dart';
 import '../models/medical_report.dart';
 import '../models/prediction_result.dart';
+import '../models/hybrid_result.dart';
 
 final reportStorageServiceProvider = Provider<ReportStorageService>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
@@ -91,6 +92,28 @@ class ReportsNotifier extends StateNotifier<List<MedicalReport>> {
     await _storage.saveReport(uid: uid, report: report);
     state = [report, ...state.where((r) => r.id != report.id)];
   }
+
+  Future<void> addReportFromHybrid({
+    required String imagePath,
+    required HybridResult hybridResult,
+  }) async {
+    final now = DateTime.now();
+    final dateStr = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+    final randStr = (now.millisecondsSinceEpoch % 10000).toString().padLeft(4, '0');
+    final id = 'REP-$dateStr-$randStr';
+
+    final report = MedicalReport.fromHybridResult(
+      id: id,
+      dateTime: now,
+      imagePath: imagePath,
+      hybridResult: hybridResult,
+    );
+
+    final uid = _ref.read(activeUserIdProvider);
+    await _storage.saveReport(uid: uid, report: report);
+    state = [report, ...state.where((r) => r.id != report.id)];
+  }
+
 
   Future<void> replaceQuestionnaireReport(MedicalReport newReport) async {
     final uid = _ref.read(activeUserIdProvider);

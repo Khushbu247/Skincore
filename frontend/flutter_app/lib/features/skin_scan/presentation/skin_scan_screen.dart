@@ -37,7 +37,7 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
     'Uploading image to SkinCore AI...',
     'Preprocessing & resizing to 224x224...',
     'Evaluating fine-tuned MobileNetV2 model...',
-    'Performing visual analysis with Groq AI Vision...',
+    'Performing visual analysis with SkinCore AI...',
     'Generating optional AI attention heatmap...',
     'Merging hybrid 3-state AI analysis...',
   ];
@@ -127,11 +127,12 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
         processingTimeMs: hybridResult.processing.totalTimeMs,
       );
 
-      // Automatically save report to Track History
-      await ref.read(reportsProvider.notifier).addReportFromPrediction(
+      // Automatically save detailed hybrid report to Track History
+      await ref.read(reportsProvider.notifier).addReportFromHybrid(
             imagePath: _imageFile!.path,
-            result: legacyResult,
+            hybridResult: hybridResult,
           );
+
 
       if (mounted) {
         setState(() {

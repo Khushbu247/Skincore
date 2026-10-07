@@ -47,13 +47,14 @@ class RegionAnalysisCard extends StatelessWidget {
                 Icon(Icons.remove_red_eye_outlined, color: Colors.indigo, size: 22),
                 SizedBox(width: 8),
                 Text(
-                  'Groq AI Visual Observation',
+                  'SkinCore AI Visual Observation',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.indigo,
                   ),
                 ),
+
               ],
             ),
             if (visualDescription.isNotEmpty) ...[

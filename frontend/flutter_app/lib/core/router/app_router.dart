@@ -33,8 +33,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final path = state.matchedLocation;
 
-      // Current Firebase user
+      // Current Firebase user or Active Email Session user
       final user = authState.value;
+      final activeEmail = ref.watch(activeUserEmailProvider);
+      final isLoggedIn = user != null || (activeEmail != null && activeEmail.isNotEmpty);
 
       final isOnboardingRoute = path == '/onboarding';
       final isLoginRoute =
@@ -56,7 +58,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // --------------------------------------------------
       // 2. Onboarding completed but user is NOT logged in
       // --------------------------------------------------
-      if (user == null) {
+      if (!isLoggedIn) {
         if (!isLoginRoute) {
           return '/login';
         }
@@ -163,6 +165,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Ref ref) {
     ref.listen(authStateProvider, (_, __) {
+      notifyListeners();
+    });
+    ref.listen(activeUserEmailProvider, (_, __) {
       notifyListeners();
     });
   }

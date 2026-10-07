@@ -184,7 +184,48 @@ class PdfReportService {
                 ),
               ),
 
-              pw.SizedBox(height: 20),
+              pw.SizedBox(height: 14),
+
+              // TABULAR REPORT BREAKDOWN
+              if (!isQuestionnaire) ...[
+                pw.Text('TABULAR MODEL PROBABILITY BREAKDOWN', style: pw.TextStyle(color: primaryColor, fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 6),
+                pw.TableHelper.fromTextArray(
+                  border: pw.TableBorder.all(color: borderColor, width: 0.8),
+                  headerStyle: pw.TextStyle(color: darkInk, fontWeight: pw.FontWeight.bold, fontSize: 8.5),
+                  cellStyle: pw.TextStyle(color: darkInk, fontSize: 8),
+                  headerDecoration: pw.BoxDecoration(color: cardBg),
+                  headers: ['CLASSIFICATION TARGET', 'MODEL PROBABILITY (%)', 'CLASSIFICATION LEVEL'],
+                  data: report.probabilities.entries.map((e) {
+                    final isTop = e.key.toLowerCase() == report.prediction.toLowerCase() ||
+                        formatClassName(e.key).toLowerCase() == report.prediction.toLowerCase();
+                    return [
+                      formatClassName(e.key),
+                      '${e.value.toStringAsFixed(2)}%',
+                      isTop ? 'PRIMARY SIGNAL' : 'SECONDARY'
+                    ];
+                  }).toList(),
+                ),
+                pw.SizedBox(height: 12),
+              ],
+
+              if (report.regionObservations != null && report.regionObservations!.isNotEmpty) ...[
+                pw.Text('SKINCORE AI REGIONAL ANALYSIS TABLE', style: pw.TextStyle(color: primaryColor, fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 6),
+                pw.TableHelper.fromTextArray(
+                  border: pw.TableBorder.all(color: borderColor, width: 0.8),
+                  headerStyle: pw.TextStyle(color: darkInk, fontWeight: pw.FontWeight.bold, fontSize: 8.5),
+                  cellStyle: pw.TextStyle(color: darkInk, fontSize: 8),
+                  headerDecoration: pw.BoxDecoration(color: cardBg),
+                  headers: ['TARGET REGION', 'VISUAL OBSERVATION', 'SEVERITY'],
+                  data: report.regionObservations!.map((r) => [
+                    (r['region'] ?? 'General').toUpperCase(),
+                    r['observation'] ?? '',
+                    (r['severity'] ?? 'moderate').toUpperCase()
+                  ]).toList(),
+                ),
+                pw.SizedBox(height: 12),
+              ],
 
               // Observations & Care Routine / Questionnaire Answers
               pw.Row(
@@ -241,6 +282,7 @@ class PdfReportService {
                   ),
                 ],
               ),
+
 
               pw.Spacer(),
 

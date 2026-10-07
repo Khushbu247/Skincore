@@ -9,6 +9,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../models/medical_report.dart';
 import '../../../providers/questionnaire_provider.dart';
 import '../../../providers/reports_provider.dart';
+import '../../../providers/skincare_routine_provider.dart';
+import '../../../models/skincare_routine.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -16,15 +18,20 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final activeEmail = ref.watch(activeUserEmailProvider);
     final user = ref.watch(authStateProvider).value;
-    final displayName = user?.displayName ?? 'Riya';
-    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'R';
+    final email = activeEmail ?? user?.email ?? '';
+    final displayName = user?.displayName != null && user!.displayName!.isNotEmpty
+        ? user.displayName!
+        : (email.isNotEmpty ? email.split('@')[0] : 'User');
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
 
     final reports = ref.watch(reportsProvider);
     final isReturningUser = ref.watch(isReturningUserProvider) || reports.length > 1;
 
     final questionnaireState = ref.watch(questionnaireProvider);
     final latestReport = reports.isNotEmpty ? reports.first : null;
+    final userRoutines = ref.watch(skincareRoutineProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -196,17 +203,17 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 24),
             ],
 
-            // Section 3: Today's Routine Checklist Widget
+            // Section 3: User-Configured Skincare Routine Checklist Widget
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Your Daily Skincare Routine', style: theme.textTheme.titleMedium),
+                  Text('Your Skincare Routine', style: theme.textTheme.titleMedium),
                   GestureDetector(
                     onTap: () => context.pushNamed('recommendations'),
                     child: Text(
-                      'Customize',
+                      userRoutines.isEmpty ? '+ Add Routine' : 'Customize',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.purple,
                         fontWeight: FontWeight.w600,
@@ -219,35 +226,81 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: Column(
-                    children: const [
-                      _RoutineRow(
-                        title: 'Gentle Cleanser',
-                        subtitle: 'Morning · Cleanse skin surface',
-                        time: '7:30 AM',
-                        done: true,
+              child: userRoutines.isEmpty
+                  ? Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: AppColors.purple.withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.spa_outlined,
+                                color: AppColors.purple,
+                                size: 26,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              'No skincare routine added yet.',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Add your first routine to get personalized reminders.',
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.muted,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: () => context.pushNamed('recommendations'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.purple,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              icon: const Icon(Icons.add_rounded, size: 18),
+                              label: const Text(
+                                'Add Routine',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      Divider(height: 1),
-                      _RoutineRow(
-                        title: 'Broad-Spectrum SPF 50',
-                        subtitle: 'Morning · Sun protection',
-                        time: '7:35 AM',
-                        done: true,
+                    )
+                  : Card(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Column(
+                          children: [
+                            for (int i = 0; i < userRoutines.length; i++) ...[
+                              if (i > 0) const Divider(height: 1),
+                              _DynamicRoutineRow(
+                                item: userRoutines[i],
+                                onToggle: () {
+                                  ref
+                                      .read(skincareRoutineProvider.notifier)
+                                      .toggleComplete(userRoutines[i].id);
+                                },
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
-                      Divider(height: 1),
-                      _RoutineRow(
-                        title: 'Niacinamide Serum',
-                        subtitle: 'Night · Barrier repair & oil balance',
-                        time: '9:00 PM',
-                        done: false,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                    ),
             ),
           ],
         ),
@@ -510,7 +563,7 @@ class _QuickActionCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.muted,
                       fontSize: 11,
                     ),
@@ -651,25 +704,14 @@ class _LatestReportCard extends StatelessWidget {
   }
 }
 
-class _RoutineRow extends StatefulWidget {
-  final String title;
-  final String subtitle;
-  final String time;
-  final bool done;
+class _DynamicRoutineRow extends StatelessWidget {
+  final SkincareRoutineItem item;
+  final VoidCallback onToggle;
 
-  const _RoutineRow({
-    required this.title,
-    required this.subtitle,
-    required this.time,
-    required this.done,
+  const _DynamicRoutineRow({
+    required this.item,
+    required this.onToggle,
   });
-
-  @override
-  State<_RoutineRow> createState() => _RoutineRowState();
-}
-
-class _RoutineRowState extends State<_RoutineRow> {
-  late bool done = widget.done;
 
   @override
   Widget build(BuildContext context) {
@@ -678,19 +720,21 @@ class _RoutineRowState extends State<_RoutineRow> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => setState(() => done = !done),
+            onTap: onToggle,
             child: Container(
               width: 22,
               height: 22,
               decoration: BoxDecoration(
-                color: done ? AppColors.success : Colors.transparent,
+                color: item.isCompleted ? AppColors.success : Colors.transparent,
                 border: Border.all(
-                  color: done ? AppColors.success : AppColors.mutedLight,
+                  color: item.isCompleted ? AppColors.success : AppColors.mutedLight,
                   width: 1.6,
                 ),
                 borderRadius: BorderRadius.circular(7),
               ),
-              child: done ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
+              child: item.isCompleted
+                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                  : null,
             ),
           ),
           const SizedBox(width: 12),
@@ -699,24 +743,24 @@ class _RoutineRowState extends State<_RoutineRow> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.title,
+                  item.productName,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13.5,
-                    decoration: done ? TextDecoration.lineThrough : null,
-                    color: done ? AppColors.muted : null,
+                    decoration: item.isCompleted ? TextDecoration.lineThrough : null,
+                    color: item.isCompleted ? AppColors.muted : null,
                   ),
                 ),
                 Text(
-                  widget.subtitle,
-                  style: TextStyle(color: AppColors.muted, fontSize: 11.5),
+                  '${item.routineType} Routine',
+                  style: const TextStyle(color: AppColors.muted, fontSize: 11.5),
                 ),
               ],
             ),
           ),
           Text(
-            widget.time,
-            style: TextStyle(color: AppColors.mutedLight, fontSize: 11),
+            item.time,
+            style: const TextStyle(color: AppColors.mutedLight, fontSize: 11, fontWeight: FontWeight.w600),
           ),
         ],
       ),
