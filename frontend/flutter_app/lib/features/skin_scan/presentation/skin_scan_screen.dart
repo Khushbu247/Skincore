@@ -166,6 +166,9 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
 
   String _formatClassName(String raw) {
     switch (raw.toLowerCase()) {
+      case 'normal_skin':
+      case 'normal/healthy skin':
+        return 'Normal / Healthy Skin';
       case 'acne':
         return 'Acne';
       case 'eczema_rash':

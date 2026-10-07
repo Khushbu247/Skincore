@@ -1,3 +1,5 @@
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -177,7 +179,7 @@ class PdfReportService {
                       ),
                       child: pw.Text(
                         isQuestionnaire ? '100% Completed' : '${report.confidence.toStringAsFixed(1)}% Match',
-                        style: pw.TextStyle(color: PdfColors.white, fontWeight: pw.FontWeight.bold, fontSize: 12),
+                        style: const pw.TextStyle(color: PdfColors.white, fontWeight: pw.FontWeight.bold, fontSize: 12),
                       ),
                     ),
                   ],
@@ -306,10 +308,29 @@ class PdfReportService {
       ),
     );
 
-    // Trigger Print/Save dialog
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-      name: 'SkinCore_Medical_Report_${report.id}.pdf',
-    );
+    final fileName = 'SkinCore_Medical_Report_${report.id}.pdf';
+    final bytes = await pdf.save();
+
+    if (kIsWeb) {
+      // Web: Direct Chrome download via Blob URL anchor (No print dialog, No share sheet)
+      await Printing.sharePdf(bytes: bytes, filename: fileName);
+    } else {
+      // Mobile: Save directly to public Downloads folder or storage
+      try {
+        io.Directory? targetDir;
+        if (io.Platform.isAndroid) {
+          final pubDownload = io.Directory('/storage/emulated/0/Download');
+          if (pubDownload.existsSync()) {
+            targetDir = pubDownload;
+          }
+        }
+        targetDir ??= io.Directory.systemTemp;
+        final file = io.File('${targetDir.path}/$fileName');
+        await file.writeAsBytes(bytes);
+      } catch (_) {
+        // Fallback share if write permission is restricted
+        await Printing.sharePdf(bytes: bytes, filename: fileName);
+      }
+    }
   }
 }

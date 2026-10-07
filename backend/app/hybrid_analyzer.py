@@ -44,6 +44,10 @@ def analyze_hybrid(
         groq_analysis=groq_result
     )
 
+    if assessment_state == "normal_appearing":
+        primary_prediction["condition"] = "normal_skin"
+        primary_prediction["condition_display"] = "Normal / Healthy Skin"
+
     # Serious condition safety handling
     serious_prob = float(formatted_probs.get("serious_condition", 0.0))
     groq_red_flags = groq_result.get("red_flags_present", False)

@@ -45,9 +45,9 @@ class _GradcamOverlayWidgetState extends State<GradcamOverlayWidget> {
                       Icon(Icons.center_focus_strong_outlined, color: Colors.deepOrange, size: 22),
                       SizedBox(width: 8),
                       Text(
-                        'AI Attention Heatmap',
+                        'AI Visual Focus — MobileNetV2',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
                           color: Colors.deepOrange,
                         ),
@@ -56,7 +56,7 @@ class _GradcamOverlayWidgetState extends State<GradcamOverlayWidget> {
                   ),
                   Switch(
                     value: _showHeatmap,
-                    activeColor: Colors.deepOrange,
+                    activeTrackColor: Colors.deepOrange,
                     onChanged: (val) {
                       setState(() {
                         _showHeatmap = val;
@@ -80,6 +80,19 @@ class _GradcamOverlayWidgetState extends State<GradcamOverlayWidget> {
                 Text(
                   widget.description,
                   style: const TextStyle(fontSize: 12, color: Colors.black54, fontStyle: FontStyle.italic),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                  ),
+                  child: const Text(
+                    'AI Visual Focus — highlights visual surface features considered by the initial 4-class MobileNetV2 classifier. It does NOT explain or prove the final Normal / Healthy classification, nor is it a medical diagnosis.',
+                    style: TextStyle(fontSize: 10.5, color: Colors.black87, height: 1.3),
+                  ),
                 ),
               ],
             ],
