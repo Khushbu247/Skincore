@@ -7,8 +7,10 @@ class ApiConstants {
   }
 
   static const String predictEndpoint = '/predict';
+  static const String predictHybridEndpoint = '/predict/hybrid';
   static const String chatbotEndpoint = '/chatbot/message';
 
   static const int connectTimeout = 15000; // 15 seconds
-  static const int receiveTimeout = 15000; // 15 seconds
+  static const int receiveTimeout = 45000; // 45 seconds for hybrid AI vision analysis
 }
+

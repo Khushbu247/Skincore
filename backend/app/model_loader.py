@@ -10,7 +10,7 @@ print(MODEL_DIR)
 # Load SavedModel
 model = tf.saved_model.load(str(MODEL_DIR))
 
-print("✅ Model loaded successfully!")
+print("[OK] Model loaded successfully!")
 
 # Get serving function
 infer = model.signatures["serving_default"]

@@ -9,7 +9,12 @@ import '../../../core/di/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../../models/prediction_result.dart';
+import '../../../../models/hybrid_result.dart';
 import '../../../../providers/reports_provider.dart';
+import '../../../../widgets/safety_warning_card.dart';
+import '../../../../widgets/region_analysis_card.dart';
+import '../../../../widgets/gradcam_overlay.dart';
+
 
 enum ScanStage { capture, preview, analyzing, result }
 
@@ -24,6 +29,7 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
   ScanStage _stage = ScanStage.capture;
   XFile? _imageFile;
   PredictionResult? _result;
+  HybridResult? _hybridResult;
   String? _errorMessage;
   int _analysisStep = 0;
 
@@ -31,7 +37,9 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
     'Uploading image to SkinCore AI...',
     'Preprocessing & resizing to 224x224...',
     'Evaluating fine-tuned MobileNetV2 model...',
-    'Calculating class probabilities...',
+    'Performing visual analysis with Groq AI Vision...',
+    'Generating optional AI attention heatmap...',
+    'Merging hybrid 3-state AI analysis...',
   ];
 
   Future<void> _pickImage(ImageSource source) async {
@@ -96,7 +104,7 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
       _errorMessage = null;
     });
 
-    final stepTimer = Stream.periodic(const Duration(milliseconds: 700), (i) => i).listen((step) {
+    final stepTimer = Stream.periodic(const Duration(milliseconds: 900), (i) => i).listen((step) {
       if (mounted && step < _analysisSteps.length) {
         setState(() => _analysisStep = step);
       }
@@ -104,18 +112,31 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
 
     try {
       final apiService = ref.read(apiServiceProvider);
-      final result = await apiService.predictSkinCondition(_imageFile!);
+      
+      // Call primary hybrid endpoint
+      final hybridResult = await apiService.predictSkinConditionHybrid(_imageFile!);
       await stepTimer.cancel();
+
+      // Convert to legacy prediction result format for report saving compatibility
+      final legacyResult = PredictionResult(
+        prediction: hybridResult.primaryPrediction.condition,
+        confidence: hybridResult.primaryPrediction.confidence,
+        probabilities: hybridResult.probabilities,
+        modelVersion: hybridResult.primaryPrediction.modelVersion,
+        imageSize: hybridResult.processing.imageSize,
+        processingTimeMs: hybridResult.processing.totalTimeMs,
+      );
 
       // Automatically save report to Track History
       await ref.read(reportsProvider.notifier).addReportFromPrediction(
             imagePath: _imageFile!.path,
-            result: result,
+            result: legacyResult,
           );
 
       if (mounted) {
         setState(() {
-          _result = result;
+          _hybridResult = hybridResult;
+          _result = legacyResult;
           _stage = ScanStage.result;
         });
       }
@@ -135,10 +156,12 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
       _stage = ScanStage.capture;
       _imageFile = null;
       _result = null;
+      _hybridResult = null;
       _errorMessage = null;
       _analysisStep = 0;
     });
   }
+
 
   String _formatClassName(String raw) {
     switch (raw.toLowerCase()) {
@@ -185,9 +208,11 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
         ScanStage.result => _ResultView(
             imageFile: _imageFile!,
             result: _result!,
+            hybridResult: _hybridResult,
             formatClassName: _formatClassName,
             onAnalyzeAnother: _resetScan,
           ),
+
       },
     );
   }
@@ -416,26 +441,51 @@ class _AnalyzingView extends StatelessWidget {
 class _ResultView extends StatelessWidget {
   final XFile imageFile;
   final PredictionResult result;
+  final HybridResult? hybridResult;
   final String Function(String) formatClassName;
   final VoidCallback onAnalyzeAnother;
 
   const _ResultView({
     required this.imageFile,
     required this.result,
+    this.hybridResult,
     required this.formatClassName,
     required this.onAnalyzeAnother,
   });
 
+  Color _getAssessmentStateColor(String state) {
+    switch (state) {
+      case 'normal_appearing':
+        return Colors.green.shade700;
+      case 'uncertain':
+        return Colors.orange.shade800;
+      case 'condition':
+      default:
+        return AppColors.purple;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isSerious = result.prediction.toLowerCase().contains('serious');
+    final isSerious = result.prediction.toLowerCase().contains('serious') ||
+        (hybridResult?.needsProfessionalReview ?? false);
+    final safetyMsg = hybridResult?.safetyMessage;
+    final assessmentStateDisplay = hybridResult?.assessmentStateDisplay ?? 'Condition Detected';
+    final assessmentState = hybridResult?.assessmentState ?? 'condition';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Safety Warning Banner
+          if (isSerious || safetyMsg != null)
+            SafetyWarningCard(
+              safetyMessage: safetyMsg ??
+                  'Elevated risk features or serious skin condition detected. Please seek prompt evaluation from a qualified dermatologist.',
+            ),
+
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: _CrossPlatformImage(
@@ -445,12 +495,55 @@ class _ResultView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+
+          // Grad-CAM Heatmap Overlay Widget (if available)
+          if (hybridResult?.gradcam.available == true &&
+              hybridResult?.gradcam.heatmapBase64 != null)
+            GradcamOverlayWidget(
+              heatmapBase64: hybridResult!.gradcam.heatmapBase64!,
+              description: hybridResult!.gradcam.description,
+            ),
+
+          // Primary Prediction Card
           Card(
             child: Padding(
               padding: const EdgeInsets.all(18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 3-State Assessment Badge
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getAssessmentStateColor(assessmentState).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          assessmentStateDisplay.toUpperCase(),
+                          style: TextStyle(
+                            color: _getAssessmentStateColor(assessmentState),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                      if (hybridResult?.skinType.estimatedType != null &&
+                          hybridResult?.skinType.estimatedType != 'unknown')
+                        Chip(
+                          avatar: const Icon(Icons.water_drop_outlined, size: 14, color: Colors.blue),
+                          label: Text(
+                            'Skin: ${hybridResult!.skinType.estimatedType.toUpperCase()}',
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                          ),
+                          backgroundColor: Colors.blue.shade50,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -458,7 +551,7 @@ class _ResultView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'AI PREDICTION RESULT',
+                            'PRIMARY CLASSIFICATION',
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: isSerious ? AppColors.danger : AppColors.rose,
                               fontWeight: FontWeight.w700,
@@ -506,6 +599,48 @@ class _ResultView extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 16),
+
+          // Groq AI Region Analysis Card (if available)
+          if (hybridResult?.groqAnalysis.available == true)
+            RegionAnalysisCard(
+              observations: hybridResult!.groqAnalysis.regionObservations,
+              visualDescription: hybridResult!.groqAnalysis.visualDescription,
+              additionalFindings: hybridResult!.groqAnalysis.additionalFindings,
+            ),
+
+          // Overall Assessment Summary Card
+          if (hybridResult?.overallAssessment != null &&
+              hybridResult!.overallAssessment.isNotEmpty) ...[
+            Card(
+              elevation: 1,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.auto_awesome, color: AppColors.purple, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'AI Summary Assessment',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      hybridResult!.overallAssessment,
+                      style: const TextStyle(fontSize: 13.5, height: 1.4, color: Colors.black87),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
           const SizedBox(height: 20),
           Text('Full Probability Distribution', style: theme.textTheme.titleMedium),
           const SizedBox(height: 10),
