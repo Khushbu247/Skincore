@@ -274,6 +274,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final reports = ref.watch(reportsProvider);
     final user = ref.watch(authStateProvider).value;
 
@@ -287,7 +288,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Track History & Reports'),
+        title: Text(l10n.translate('tracker_title')),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.menu_rounded),

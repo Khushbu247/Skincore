@@ -19,6 +19,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final activeEmail = ref.watch(activeUserEmailProvider);
     final user = ref.watch(authStateProvider).value;
     final email = activeEmail ?? user?.email ?? '';
@@ -59,7 +60,7 @@ class HomeScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            isReturningUser ? 'WELCOME BACK 👋' : 'WELCOME TO SKINCORE ✨',
+                            isReturningUser ? l10n.translate('home_welcome_back_tag') : l10n.translate('home_welcome_new_tag'),
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: AppColors.purple,
                               fontWeight: FontWeight.w700,
@@ -124,8 +125,8 @@ class HomeScreen extends ConsumerWidget {
                   Expanded(
                     child: _QuickActionCard(
                       icon: Icons.center_focus_strong_rounded,
-                      title: 'AI Skin Scan',
-                      subtitle: '30s Diagnostics',
+                      title: l10n.translate('home_quick_scan_title'),
+                      subtitle: l10n.translate('home_quick_scan_sub'),
                       badge: 'AI',
                       color: AppColors.rose,
                       onTap: () => context.pushNamed('scan'),
@@ -135,8 +136,8 @@ class HomeScreen extends ConsumerWidget {
                   Expanded(
                     child: _QuickActionCard(
                       icon: Icons.assignment_outlined,
-                      title: 'Medical Reports',
-                      subtitle: '${reports.length} Saved',
+                      title: l10n.translate('home_quick_reports_title'),
+                      subtitle: '${reports.length} ${l10n.translate('home_quick_reports_sub_saved')}',
                       badge: 'PDF',
                       color: AppColors.purple,
                       onTap: () => context.goNamed('progress'),
@@ -153,8 +154,8 @@ class HomeScreen extends ConsumerWidget {
                   Expanded(
                     child: _QuickActionCard(
                       icon: Icons.chat_bubble_outline_rounded,
-                      title: 'AI Assistant',
-                      subtitle: 'Skin Consultant',
+                      title: l10n.translate('home_quick_chat_title'),
+                      subtitle: l10n.translate('home_quick_chat_sub'),
                       color: const Color(0xFFE9497A),
                       onTap: () => context.goNamed('chat'),
                     ),
@@ -163,8 +164,8 @@ class HomeScreen extends ConsumerWidget {
                   Expanded(
                     child: _QuickActionCard(
                       icon: Icons.spa_outlined,
-                      title: 'Skincare Routine',
-                      subtitle: 'Personalized',
+                      title: l10n.translate('home_quick_routine_title'),
+                      subtitle: l10n.translate('home_quick_routine_sub'),
                       color: const Color(0xFFF4915E),
                       onTap: () => context.pushNamed('recommendations'),
                     ),
@@ -182,11 +183,11 @@ class HomeScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Latest Medical Report', style: theme.textTheme.titleMedium),
+                    Text(l10n.translate('home_latest_report_title'), style: theme.textTheme.titleMedium),
                     GestureDetector(
                       onTap: () => context.goNamed('progress'),
                       child: Text(
-                        'View All (${reports.length})',
+                        '${l10n.translate('home_view_all_count')} (${reports.length})',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: AppColors.purple,
                           fontWeight: FontWeight.w600,
@@ -210,11 +211,11 @@ class HomeScreen extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Your Skincare Routine', style: theme.textTheme.titleMedium),
+                  Text(l10n.translate('home_routine_section_title'), style: theme.textTheme.titleMedium),
                   GestureDetector(
                     onTap: () => context.pushNamed('recommendations'),
                     child: Text(
-                      userRoutines.isEmpty ? '+ Add Routine' : 'Customize',
+                      userRoutines.isEmpty ? '+ ${l10n.translate('home_add_routine')}' : l10n.translate('common_confirm'),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.purple,
                         fontWeight: FontWeight.w600,
@@ -248,14 +249,14 @@ class HomeScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 14),
                             Text(
-                              'No skincare routine added yet.',
+                              l10n.translate('home_no_routine_msg'),
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              'Add your first routine to get personalized reminders.',
+                              l10n.translate('home_no_routine_sub'),
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: AppColors.muted,
@@ -273,9 +274,9 @@ class HomeScreen extends ConsumerWidget {
                                 ),
                               ),
                               icon: const Icon(Icons.add_rounded, size: 18),
-                              label: const Text(
-                                'Add Routine',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                              label: Text(
+                                l10n.translate('home_add_routine'),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
                           ],
@@ -313,6 +314,8 @@ class HomeScreen extends ConsumerWidget {
 class _OnboardingQuestionnaireBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -338,13 +341,13 @@ class _OnboardingQuestionnaireBanner extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.22),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.assignment_turned_in_rounded, color: Colors.white, size: 14),
-                    SizedBox(width: 6),
+                    const Icon(Icons.assignment_turned_in_rounded, color: Colors.white, size: 14),
+                    const SizedBox(width: 6),
                     Text(
-                      'Account Setup Required',
-                      style: TextStyle(
+                      l10n.translate('home_banner_badge'),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -357,9 +360,9 @@ class _OnboardingQuestionnaireBanner extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Help us understand your skin and concerns better',
-            style: TextStyle(
+          Text(
+            l10n.translate('home_banner_title'),
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 18.5,
               fontWeight: FontWeight.bold,
@@ -367,9 +370,9 @@ class _OnboardingQuestionnaireBanner extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Complete 12 quick questions to personalize your diagnostic recommendations & routine.',
-            style: TextStyle(
+          Text(
+            l10n.translate('home_banner_sub'),
+            style: const TextStyle(
               color: Colors.white70,
               fontSize: 12.5,
               height: 1.4,
@@ -386,9 +389,9 @@ class _OnboardingQuestionnaireBanner extends StatelessWidget {
               elevation: 0,
             ),
             icon: const Icon(Icons.quiz_outlined, size: 18),
-            label: const Text(
-              'Start Questionnaire',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+            label: Text(
+              l10n.translate('home_banner_btn'),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
             ),
           ),
         ],
@@ -406,10 +409,30 @@ class _CompletedQuestionnaireCard extends StatelessWidget {
     required this.mainConcern,
   });
 
+  String _getOptionDisplayLabel(BuildContext context, String option) {
+    final l10n = AppLocalizations.of(context);
+    final lower = option.toLowerCase();
+    if (lower.contains('oily')) return l10n.translate('opt_oily');
+    if (lower.contains('dry')) return l10n.translate('opt_dry');
+    if (lower.contains('combination')) return l10n.translate('opt_combination');
+    if (lower.contains('normal')) return l10n.translate('opt_normal');
+    if (lower.contains('sensitive') && lower.contains('high')) return l10n.translate('opt_high');
+    if (lower.contains('sensitive')) return l10n.translate('opt_sensitive');
+    if (lower.contains('acne')) return l10n.translate('opt_acne');
+    if (lower.contains('aging') || lower.contains('fine lines')) return l10n.translate('opt_aging');
+    if (lower.contains('pigmentation') || lower.contains('dark spots')) return l10n.translate('opt_pigmentation');
+    if (lower.contains('redness') || lower.contains('rosacea')) return l10n.translate('opt_redness');
+    return option;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
+    final displaySkin = _getOptionDisplayLabel(context, skinType);
+    final displayConcern = _getOptionDisplayLabel(context, mainConcern);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -441,7 +464,7 @@ class _CompletedQuestionnaireCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'SKIN PROFILE COMPLETED',
+                      l10n.translate('home_profile_completed'),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: AppColors.purple,
                         fontWeight: FontWeight.bold,
@@ -450,9 +473,9 @@ class _CompletedQuestionnaireCard extends StatelessWidget {
                     ),
                     GestureDetector(
                       onTap: () => context.goNamed('progress'),
-                      child: const Text(
-                        'View in Reports',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.translate('home_view_in_reports'),
+                        style: const TextStyle(
                           color: AppColors.purple,
                           fontWeight: FontWeight.bold,
                           fontSize: 11.5,
@@ -463,7 +486,7 @@ class _CompletedQuestionnaireCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$skinType Skin · $mainConcern',
+                  '$displaySkin · $displayConcern',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -586,20 +609,21 @@ class _LatestReportCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final isSerious = report.prediction.toLowerCase().contains('serious');
     final formattedDate = DateFormat('MMM dd, yyyy · hh:mm a').format(report.dateTime);
 
     String formatClassName(String raw) {
       switch (raw.toLowerCase()) {
         case 'acne':
-          return 'Acne Vulgaris';
+          return l10n.translate('class_acne');
         case 'eczema_rash':
         case 'eczema/rash':
-          return 'Eczema / Rash';
+          return l10n.translate('class_eczema');
         case 'pigmentation':
-          return 'Pigmentation';
+          return l10n.translate('class_pigmentation');
         case 'serious_condition':
-          return 'Serious Condition Alert';
+          return l10n.translate('class_serious');
         default:
           return raw.replaceAll('_', ' ').toUpperCase();
       }
@@ -696,7 +720,7 @@ class _LatestReportCard extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               icon: const Icon(Icons.remove_red_eye_outlined, size: 16),
-              label: const Text('View & Download Medical Report'),
+              label: Text(l10n.translate('home_view_pdf_btn')),
             ),
           ],
         ),
@@ -775,6 +799,7 @@ class _MythOfTheDaySection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final mythAsync = ref.watch(mythOfTheDayProvider);
 
     return Column(
@@ -785,20 +810,20 @@ class _MythOfTheDaySection extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Myth of the Day', style: theme.textTheme.titleMedium),
+              Text(l10n.translate('home_myth_title'), style: theme.textTheme.titleMedium),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppColors.purple.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.auto_awesome_rounded, size: 12, color: AppColors.purple),
-                    SizedBox(width: 4),
+                    const Icon(Icons.auto_awesome_rounded, size: 12, color: AppColors.purple),
+                    const SizedBox(width: 4),
                     Text(
-                      'Daily Fact Check',
-                      style: TextStyle(color: AppColors.purple, fontSize: 10, fontWeight: FontWeight.bold),
+                      l10n.translate('home_myth_fact_check'),
+                      style: const TextStyle(color: AppColors.purple, fontSize: 10, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -853,7 +878,7 @@ class _MythOfTheDaySection extends ConsumerWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Truth: ${myth.truth}',
+                            '${l10n.translate('home_myth_truth_prefix')}: ${myth.truth}',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12.5,
@@ -873,17 +898,17 @@ class _MythOfTheDaySection extends ConsumerWidget {
                   child: CircularProgressIndicator(color: Colors.white),
                 ),
               ),
-              error: (err, stack) => const Column(
+              error: (err, stack) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     '"Oily skin doesn\'t need moisturizer."',
                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14.5),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
-                    'Truth: Oily and acne-prone skin still benefits from lightweight, non-comedogenic moisturizers to prevent over-secretion of oil.',
-                    style: TextStyle(color: Colors.white70, fontSize: 12.5),
+                    '${l10n.translate('home_myth_truth_prefix')}: Oily and acne-prone skin still benefits from lightweight, non-comedogenic moisturizers to prevent over-secretion of oil.',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12.5),
                   ),
                 ],
               ),

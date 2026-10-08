@@ -10,7 +10,6 @@ import '../../features/dashboard/presentation/home_screen.dart';
 import '../../features/skin_scan/presentation/skin_scan_screen.dart';
 import '../../features/questionnaire/presentation/questionnaire_screen.dart';
 import '../../features/recommendations/presentation/product_recommendation_screen.dart';
-import '../../features/recommendations/presentation/recommendations_screen.dart';
 import '../../features/chatbot/presentation/chatbot_screen.dart';
 import '../../features/progress_tracker/presentation/progress_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';

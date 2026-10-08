@@ -65,6 +65,7 @@ class _ProductRecommendationScreenState extends ConsumerState<ProductRecommendat
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
     final recState = ref.watch(recommendationProvider);
 
     return Scaffold(
@@ -73,7 +74,7 @@ class _ProductRecommendationScreenState extends ConsumerState<ProductRecommendat
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Personalized Skincare'),
+        title: Text(l10n.translate('reco_title')),
         centerTitle: true,
         actions: [
           IconButton(

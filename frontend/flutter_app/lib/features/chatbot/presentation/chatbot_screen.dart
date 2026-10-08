@@ -157,6 +157,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -180,9 +181,9 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'SkinCore Assistant',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                Text(
+                  l10n.translate('chat_appbar_title'),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
                 Row(
                   children: [
@@ -195,9 +196,9 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Text(
-                      'AI Active • 24/7',
-                      style: TextStyle(fontSize: 10.5, color: AppColors.success),
+                    Text(
+                      l10n.translate('chat_active_status'),
+                      style: const TextStyle(fontSize: 10.5, color: AppColors.success),
                     ),
                   ],
                 ),
@@ -241,15 +242,15 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(
-                  padding: EdgeInsets.only(left: 4, bottom: 8),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 8),
                   child: Row(
                     children: [
-                      Icon(Icons.help_outline_rounded, size: 14, color: AppColors.purple),
-                      SizedBox(width: 4),
+                      const Icon(Icons.help_outline_rounded, size: 14, color: AppColors.purple),
+                      const SizedBox(width: 4),
                       Text(
-                        'Frequently Asked Questions',
-                        style: TextStyle(
+                        l10n.translate('chat_faq_title'),
+                        style: const TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.bold,
                           color: AppColors.purple,
@@ -348,11 +349,11 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                           maxLines: 4,
                           minLines: 1,
                           style: const TextStyle(fontSize: 14),
-                          decoration: const InputDecoration(
-                            hintText: 'Ask about acne, routines, SPF, or scan tips...',
-                            hintStyle: TextStyle(fontSize: 13, color: AppColors.muted),
+                          decoration: InputDecoration(
+                            hintText: l10n.translate('chat_input_hint'),
+                            hintStyle: const TextStyle(fontSize: 13, color: AppColors.muted),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
+                            contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 10,
                             ),
