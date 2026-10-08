@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/di/providers.dart';
+import '../core/localization/app_localizations.dart';
 import '../core/theme/app_colors.dart';
 
 class AppDrawer extends ConsumerWidget {
@@ -11,6 +12,7 @@ class AppDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final activeEmail = ref.watch(activeUserEmailProvider);
     final user = ref.watch(authStateProvider).value;
     final email = activeEmail ?? user?.email ?? '';
@@ -95,7 +97,7 @@ class AppDrawer extends ConsumerWidget {
                 children: [
                   _DrawerItem(
                     icon: Icons.home_rounded,
-                    label: 'Home',
+                    label: l10n.translate('nav_home'),
                     selected: currentLocation == '/home',
                     onTap: () {
                       Navigator.pop(context);
@@ -104,7 +106,7 @@ class AppDrawer extends ConsumerWidget {
                   ),
                   _DrawerItem(
                     icon: Icons.assignment_outlined,
-                    label: 'Medical Reports & History',
+                    label: l10n.translate('tracker_title'),
                     badge: 'NEW',
                     selected: currentLocation == '/progress',
                     onTap: () {
@@ -114,7 +116,7 @@ class AppDrawer extends ConsumerWidget {
                   ),
                   _DrawerItem(
                     icon: Icons.center_focus_strong_rounded,
-                    label: 'Start AI Skin Scan',
+                    label: l10n.translate('home_start_scan_button'),
                     selected: currentLocation == '/scan',
                     onTap: () {
                       Navigator.pop(context);
@@ -123,7 +125,7 @@ class AppDrawer extends ConsumerWidget {
                   ),
                   _DrawerItem(
                     icon: Icons.chat_bubble_rounded,
-                    label: 'AI Skin Assistant',
+                    label: l10n.translate('chat_title'),
                     selected: currentLocation == '/chat',
                     onTap: () {
                       Navigator.pop(context);
@@ -132,7 +134,7 @@ class AppDrawer extends ConsumerWidget {
                   ),
                   _DrawerItem(
                     icon: Icons.spa_rounded,
-                    label: 'Skincare Routine',
+                    label: l10n.translate('home_routine_title'),
                     selected: currentLocation == '/recommendations',
                     onTap: () {
                       Navigator.pop(context);
@@ -142,7 +144,7 @@ class AppDrawer extends ConsumerWidget {
                   const Divider(height: 24, indent: 8, endIndent: 8),
                   _DrawerItem(
                     icon: Icons.settings_rounded,
-                    label: 'Settings',
+                    label: l10n.translate('nav_settings'),
                     selected: currentLocation == '/settings',
                     onTap: () {
                       Navigator.pop(context);
@@ -186,7 +188,7 @@ class AppDrawer extends ConsumerWidget {
                   foregroundColor: AppColors.danger,
                 ),
                 icon: const Icon(Icons.logout_rounded, size: 18),
-                label: const Text('Sign Out'),
+                label: Text(l10n.translate('auth_sign_out')),
               ),
             ),
           ],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/di/providers.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/services/questionnaire_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/gradient_button.dart';
@@ -140,10 +141,32 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
     }
   }
 
+  String _getOptionDisplayLabel(BuildContext context, String option) {
+    final l10n = AppLocalizations.of(context);
+    final lower = option.toLowerCase();
+    if (lower.contains('oily')) return l10n.translate('opt_oily');
+    if (lower.contains('dry')) return l10n.translate('opt_dry');
+    if (lower.contains('combination')) return l10n.translate('opt_combination');
+    if (lower.contains('normal')) return l10n.translate('opt_normal');
+    if (lower.contains('sensitive') && lower.contains('high')) return l10n.translate('opt_high');
+    if (lower.contains('sensitive')) return l10n.translate('opt_sensitive');
+    if (lower.contains('acne')) return l10n.translate('opt_acne');
+    if (lower.contains('aging') || lower.contains('fine lines')) return l10n.translate('opt_aging');
+    if (lower.contains('pigmentation') || lower.contains('dark spots')) return l10n.translate('opt_pigmentation');
+    if (lower.contains('redness') || lower.contains('rosacea')) return l10n.translate('opt_redness');
+    if (lower.contains('budget friendly')) return l10n.translate('opt_budget_low');
+    if (lower.contains('mid-range')) return l10n.translate('opt_budget_mid');
+    if (lower.contains('premium')) return l10n.translate('opt_budget_premium');
+    if (lower.contains('low') || lower.contains('gentle')) return l10n.translate('opt_low');
+    if (lower.contains('moderate')) return l10n.translate('opt_medium');
+    return option;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     if (_isLoading) {
       return const Scaffold(
@@ -166,7 +189,7 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
             }
           },
         ),
-        title: const Text('Skin Profile Survey'),
+        title: Text(l10n.translate('q_title')),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -182,7 +205,7 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Help us understand your skin and concerns better',
+                        l10n.translate('q_subtitle'),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppColors.purple,
@@ -192,7 +215,7 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Question ${_currentIndex + 1} of ${_questions.length} · ${currentQ.section}',
+                    '${l10n.translate('q_step')} ${_currentIndex + 1} ${l10n.translate('q_of')} ${_questions.length} · ${currentQ.section}',
                     style: const TextStyle(color: AppColors.muted, fontSize: 12),
                   ),
                   const SizedBox(height: 10),
@@ -270,7 +293,7 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
                                 const SizedBox(width: 14),
                                 Expanded(
                                   child: Text(
-                                    option,
+                                    _getOptionDisplayLabel(context, option),
                                     style: TextStyle(
                                       fontWeight: selected ? FontWeight.bold : FontWeight.w500,
                                       color: selected ? AppColors.purple : null,
@@ -298,7 +321,7 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: _previousQuestion,
-                        child: const Text('Back'),
+                        child: Text(l10n.translate('common_back')),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -306,7 +329,7 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
                   Expanded(
                     flex: 2,
                     child: GradientButton(
-                      label: _currentIndex == _questions.length - 1 ? 'Complete & Save Profile' : 'Next Question',
+                      label: _currentIndex == _questions.length - 1 ? l10n.translate('q_submit') : l10n.translate('common_next'),
                       icon: _currentIndex == _questions.length - 1 ? Icons.check_circle_rounded : Icons.arrow_forward_rounded,
                       isLoading: _isSubmitting,
                       onPressed: _isSubmitting ? () {} : _nextQuestion,

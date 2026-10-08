@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/di/providers.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 
 import '../../../providers/notification_provider.dart';
@@ -17,6 +18,14 @@ class SettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final activeEmail = ref.watch(activeUserEmailProvider);
     final user = ref.watch(authStateProvider).valueOrNull;
+    final l10n = AppLocalizations.of(context);
+    final currentLocale = ref.watch(localeProvider);
+
+    final String currentLangLabel = switch (currentLocale.languageCode) {
+      'hi' => 'हिन्दी',
+      'mr' => 'मराठी',
+      _ => 'English',
+    };
 
     final email = activeEmail ?? user?.email ?? '';
     final displayName = user?.displayName != null && user!.displayName!.isNotEmpty
@@ -32,7 +41,7 @@ class SettingsScreen extends ConsumerWidget {
           onPressed: () => Scaffold.of(context).openDrawer(),
           tooltip: 'Open Side Menu',
         ),
-        title: const Text('Settings & Profile'),
+        title: Text(l10n.translate('settings_title')),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -87,15 +96,15 @@ class SettingsScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   SwitchListTile(
-                    title: const Text('Dark mode'),
+                    title: Text(l10n.translate('settings_dark_mode')),
                     value: themeMode == ThemeMode.dark,
                     onChanged: (_) => ref.read(themeModeProvider.notifier).toggle(),
                     activeTrackColor: AppColors.purple,
                   ),
                   const Divider(height: 1),
                   SwitchListTile(
-                    title: const Text('Smart Notifications'),
-                    subtitle: const Text('Automated skincare routine reminders'),
+                    title: Text(l10n.translate('settings_smart_notifs')),
+                    subtitle: Text(l10n.translate('settings_smart_notifs_sub')),
                     value: smartNotifications,
                     onChanged: (val) {
                       ref.read(smartNotificationsProvider.notifier).setEnabled(val);
@@ -115,10 +124,27 @@ class SettingsScreen extends ConsumerWidget {
                     activeTrackColor: AppColors.purple,
                   ),
                   const Divider(height: 1),
-                  ListTile(title: const Text('Language'), trailing: const Text('English'), onTap: () {}),
+                  ListTile(
+                    title: Text(l10n.translate('settings_language')),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          currentLangLabel,
+                          style: const TextStyle(
+                            color: AppColors.purple,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.muted),
+                      ],
+                    ),
+                    onTap: () => _showLanguageSelectorModal(context, ref),
+                  ),
                   const Divider(height: 1),
                   ListTile(
-                    title: const Text('Privacy & data'),
+                    title: Text(l10n.translate('settings_privacy')),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => _showPrivacyModal(context),
                   ),
@@ -147,11 +173,103 @@ class SettingsScreen extends ConsumerWidget {
                 foregroundColor: AppColors.danger,
               ),
               icon: const Icon(Icons.logout_rounded, size: 18),
-              label: const Text('Sign out'),
+              label: Text(l10n.translate('auth_sign_out')),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showLanguageSelectorModal(BuildContext context, WidgetRef ref) {
+    final currentLocale = ref.read(localeProvider);
+    final l10n = AppLocalizations.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Text(
+                l10n.translate('language_select'),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              _buildLanguageOption(
+                context,
+                ref,
+                title: 'English',
+                localeCode: 'en',
+                isSelected: currentLocale.languageCode == 'en',
+              ),
+              const Divider(height: 1),
+              _buildLanguageOption(
+                context,
+                ref,
+                title: 'हिन्दी',
+                localeCode: 'hi',
+                isSelected: currentLocale.languageCode == 'hi',
+              ),
+              const Divider(height: 1),
+              _buildLanguageOption(
+                context,
+                ref,
+                title: 'मराठी',
+                localeCode: 'mr',
+                isSelected: currentLocale.languageCode == 'mr',
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageOption(
+    BuildContext context,
+    WidgetRef ref, {
+    required String title,
+    required String localeCode,
+    required bool isSelected,
+  }) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected ? AppColors.purple : null,
+        ),
+      ),
+      trailing: isSelected
+          ? const Icon(Icons.check_circle_rounded, color: AppColors.purple)
+          : null,
+      onTap: () {
+        ref.read(localeProvider.notifier).setLocale(Locale(localeCode));
+        Navigator.pop(context);
+      },
     );
   }
 

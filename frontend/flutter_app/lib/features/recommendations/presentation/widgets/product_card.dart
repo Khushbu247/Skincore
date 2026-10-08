@@ -47,7 +47,6 @@ class ProductCard extends ConsumerWidget {
       context: context,
       builder: (dialogCtx) => StatefulBuilder(
         builder: (context, setDialogState) {
-          final theme = Theme.of(context);
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: const Row(

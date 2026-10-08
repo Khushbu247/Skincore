@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/di/providers.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../../models/prediction_result.dart';
@@ -165,19 +166,25 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
 
 
   String _formatClassName(String raw) {
+    final l10n = AppLocalizations.of(context);
     switch (raw.toLowerCase()) {
       case 'normal_skin':
       case 'normal/healthy skin':
-        return 'Normal / Healthy Skin';
+        return l10n.translate('cond_normal_healthy');
       case 'acne':
-        return 'Acne';
+      case 'acne_vulgaris':
+        return l10n.translate('cond_acne_vulgaris');
       case 'eczema_rash':
       case 'eczema/rash':
-        return 'Eczema / Rash';
+      case 'eczema':
+        return l10n.translate('cond_eczema');
       case 'pigmentation':
-        return 'Pigmentation';
-      case 'serious_condition':
-        return 'Serious Condition';
+      case 'melasma':
+        return l10n.translate('cond_melasma');
+      case 'rosacea':
+        return l10n.translate('cond_rosacea');
+      case 'psoriasis':
+        return l10n.translate('cond_psoriasis');
       default:
         return raw.replaceAll('_', ' ').toUpperCase();
     }
@@ -185,13 +192,15 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => context.pop(),
         ),
-        title: const Text('AI Skin Scan'),
+        title: Text(l10n.translate('scan_title')),
         centerTitle: true,
       ),
       body: switch (_stage) {

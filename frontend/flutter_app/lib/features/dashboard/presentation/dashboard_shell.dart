@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../widgets/app_drawer.dart';
 
@@ -19,6 +20,7 @@ class DashboardShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _indexForLocation(location);
+    final l10n = AppLocalizations.of(context);
 
     void onTap(int index) {
       switch (index) {
@@ -55,18 +57,18 @@ class DashboardShell extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _NavIcon(icon: Icons.home_rounded, label: 'Home', selected: currentIndex == 0, onTap: () => onTap(0)),
+              _NavIcon(icon: Icons.home_rounded, label: l10n.translate('nav_home'), selected: currentIndex == 0, onTap: () => onTap(0)),
               _NavIcon(
                   icon: Icons.show_chart_rounded,
-                  label: 'Progress',
+                  label: l10n.translate('nav_tracker'),
                   selected: currentIndex == 1,
                   onTap: () => onTap(1)),
               const SizedBox(width: 48), // space for notch/FAB
               _NavIcon(
-                  icon: Icons.chat_bubble_rounded, label: 'Chat', selected: currentIndex == 2, onTap: () => onTap(2)),
+                  icon: Icons.chat_bubble_rounded, label: l10n.translate('nav_chatbot'), selected: currentIndex == 2, onTap: () => onTap(2)),
               _NavIcon(
                   icon: Icons.person_rounded,
-                  label: 'Profile',
+                  label: l10n.translate('nav_profile'),
                   selected: currentIndex == 3,
                   onTap: () => onTap(3)),
             ],

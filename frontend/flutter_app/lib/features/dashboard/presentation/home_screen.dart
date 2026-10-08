@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/di/providers.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/services/myth_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../models/medical_report.dart';

@@ -96,3 +96,30 @@ class ThemeModeController extends Notifier<ThemeMode> {
 final themeModeProvider = NotifierProvider<ThemeModeController, ThemeMode>(
   ThemeModeController.new,
 );
+
+/// Locale controller for English, Hindi, and Marathi localization
+class LocaleController extends Notifier<Locale> {
+  static const _key = 'app_locale';
+
+  @override
+  Locale build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final saved = prefs.getString(_key);
+    return switch (saved) {
+      'hi' => const Locale('hi'),
+      'mr' => const Locale('mr'),
+      _ => const Locale('en'),
+    };
+  }
+
+  void setLocale(Locale newLocale) {
+    if (!['en', 'hi', 'mr'].contains(newLocale.languageCode)) return;
+    state = newLocale;
+    ref.read(sharedPreferencesProvider).setString(_key, newLocale.languageCode);
+  }
+}
+
+final localeProvider = NotifierProvider<LocaleController, Locale>(
+  LocaleController.new,
+);
+

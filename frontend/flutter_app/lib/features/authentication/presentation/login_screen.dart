@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/di/providers.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/gradient_button.dart';
 
@@ -271,6 +272,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final currentLocale = ref.watch(localeProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -281,25 +284,66 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               const SizedBox(height: 40),
 
-              // Logo
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: AppColors.brandGradient,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Icon(
-                  Icons.favorite_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
+              // Top Bar with Logo & Language Dropdown Selector
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.brandGradient,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Icon(
+                      Icons.favorite_rounded,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.dividerColor.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: currentLocale.languageCode,
+                        icon: const Icon(Icons.language_rounded, size: 20),
+                        isDense: true,
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'en',
+                            child: Text('English', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          ),
+                          DropdownMenuItem(
+                            value: 'hi',
+                            child: Text('हिन्दी', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          ),
+                          DropdownMenuItem(
+                            value: 'mr',
+                            child: Text('मराठी', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          ),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) {
+                            ref.read(localeProvider.notifier).setLocale(Locale(val));
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 24),
 
               Text(
-                _isSignUpMode ? 'Create Account' : 'Welcome back',
+                _isSignUpMode ? l10n.translate('auth_create_account') : l10n.translate('auth_welcome_back'),
                 style: theme.textTheme.headlineMedium,
               ),
 
@@ -307,8 +351,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               Text(
                 _isSignUpMode
-                    ? 'Register as a new member to start your skin journey'
-                    : 'Sign in to continue your skin journey',
+                    ? l10n.translate('auth_signup_subtitle')
+                    : l10n.translate('auth_login_subtitle'),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: AppColors.muted,
                 ),
@@ -320,9 +364,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               TextField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  hintText: 'Email address',
-                  prefixIcon: Icon(Icons.email_outlined, size: 20),
+                decoration: InputDecoration(
+                  hintText: l10n.translate('auth_email_hint'),
+                  prefixIcon: const Icon(Icons.email_outlined, size: 20),
                 ),
               ),
 
@@ -333,7 +377,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 controller: _passwordCtrl,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  hintText: 'Password',
+                  hintText: l10n.translate('auth_password_hint'),
                   prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -346,7 +390,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         _obscurePassword = !_obscurePassword;
                       });
                     },
-                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                    tooltip: _obscurePassword ? l10n.translate('auth_show_password') : l10n.translate('auth_hide_password'),
                   ),
                 ),
               ),
@@ -358,7 +402,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   controller: _confirmPasswordCtrl,
                   obscureText: _obscureConfirmPassword,
                   decoration: InputDecoration(
-                    hintText: 'Confirm Password',
+                    hintText: l10n.translate('auth_confirm_password_hint'),
                     prefixIcon: const Icon(Icons.lock_reset_rounded, size: 20),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -373,7 +417,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           _obscureConfirmPassword = !_obscureConfirmPassword;
                         });
                       },
-                      tooltip: _obscureConfirmPassword ? 'Show password' : 'Hide password',
+                      tooltip: _obscureConfirmPassword ? l10n.translate('auth_show_password') : l10n.translate('auth_hide_password'),
                     ),
                   ),
                 ),
@@ -396,7 +440,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () => context.pushNamed('forgot-password'),
-                    child: const Text('Forgot password?'),
+                    child: Text(l10n.translate('auth_forgot_password')),
                   ),
                 ),
 
@@ -404,7 +448,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               // Email Login / Sign Up Submit Button
               GradientButton(
-                label: _isSignUpMode ? 'Create Account' : 'Log in',
+                label: _isSignUpMode ? l10n.translate('auth_create_account') : l10n.translate('auth_login_button'),
                 isLoading: _loading,
                 onPressed: _loading ? null : _submitEmailAuth,
               ),
@@ -418,7 +462,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Text(
-                      'or continue with',
+                      l10n.translate('auth_or_continue_with'),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.muted,
                       ),
@@ -440,7 +484,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Icons.g_mobiledata_rounded,
                     size: 26,
                   ),
-                  label: const Text('Continue with Google'),
+                  label: Text(l10n.translate('auth_google_continue')),
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -457,7 +501,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _isSignUpMode ? "Already have an account? " : "Don't have an account? ",
+                      _isSignUpMode ? l10n.translate('auth_already_have_account') : l10n.translate('auth_dont_have_account'),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.muted,
                       ),
@@ -470,7 +514,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         });
                       },
                       child: Text(
-                        _isSignUpMode ? 'Log in' : 'Sign up',
+                        _isSignUpMode ? l10n.translate('auth_log_in_link') : l10n.translate('auth_sign_up_link'),
                         style: const TextStyle(
                           color: AppColors.purple,
                           fontWeight: FontWeight.w700,
