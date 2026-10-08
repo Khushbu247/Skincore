@@ -31,25 +31,22 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   final FocusNode _inputFocusNode = FocusNode();
   bool _isThinking = false;
 
-  final List<_ChatMessageItem> _messages = [
-    _ChatMessageItem(
-      text: "👋 Hi! I'm SkinCore AI, your personal dermatology-aware assistant.\n\n"
-          "I can help with daily skincare routines, ingredient advice, skin scan tips, "
-          "or understanding conditions like Acne, Pigmentation, and Eczema.\n\n"
-          "What's on your mind today?",
-      isUser: false,
-      timestamp: DateTime.now(),
-    ),
-  ];
+  final List<_ChatMessageItem> _messages = [];
 
-  final List<String> _faqQuestions = const [
-    "📸 How to get accurate skin scans?",
-    "🌿 Best daily routine for Acne?",
-    "✨ How to target Dark Spots?",
-    "☀️ SPF & Sunscreen application tips",
-    "🩺 When should I consult a Dermatologist?",
-    "🧪 Safe active ingredient pairings",
-  ];
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_messages.isEmpty) {
+      final l10n = AppLocalizations.of(context);
+      _messages.add(
+        _ChatMessageItem(
+          text: "${l10n.translate('chat_welcome_title')}\n\n${l10n.translate('chat_welcome_sub')}",
+          isUser: false,
+          timestamp: DateTime.now(),
+        ),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -88,6 +85,8 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     final String query = (presetText ?? _textController.text).trim();
     if (query.isEmpty || _isThinking) return;
 
+    final l10n = AppLocalizations.of(context);
+
     if (presetText == null) {
       _textController.clear();
     }
@@ -114,10 +113,18 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             })
         .toList();
 
+    final langCode = l10n.locale.languageCode;
+    String langInstruction = '';
+    if (langCode == 'hi') {
+      langInstruction = '[User Language Preference: Please answer in Hindi (हिन्दी)]\n';
+    } else if (langCode == 'mr') {
+      langInstruction = '[User Language Preference: Please answer in Marathi (मराठी)]\n';
+    }
+
     try {
       final apiService = ref.read(apiServiceProvider);
       final String rawReply = await apiService.sendChatMessage(
-        query,
+        '$langInstruction$query',
         history: history,
       );
 
@@ -141,8 +148,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         setState(() {
           _messages.add(
             _ChatMessageItem(
-              text: "I'm having trouble connecting right now, but here's a quick tip: "
-                  "Always keep skin clean and hydrated, and apply SPF 30+ daily!",
+              text: l10n.translate('chat_offline_fallback'),
               isUser: false,
               timestamp: DateTime.now(),
             ),
@@ -158,6 +164,15 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
+
+    final faqQuestions = [
+      l10n.translate('chat_faq_1'),
+      l10n.translate('chat_faq_2'),
+      l10n.translate('chat_faq_3'),
+      l10n.translate('chat_faq_4'),
+      l10n.translate('chat_faq_5'),
+      l10n.translate('chat_faq_6'),
+    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -210,13 +225,13 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded, size: 20),
-            tooltip: 'Clear Chat',
+            tooltip: l10n.translate('chat_clear_tooltip'),
             onPressed: () {
               setState(() {
                 _messages.clear();
                 _messages.add(
                   _ChatMessageItem(
-                    text: "Chat cleared! How else can I assist your skincare journey today?",
+                    text: l10n.translate('chat_cleared_msg'),
                     isUser: false,
                     timestamp: DateTime.now(),
                   ),
@@ -264,18 +279,18 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
                   child: Row(
-                    children: _faqQuestions.map((question) {
+                    children: faqQuestions.map((question) {
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: ActionChip(
                           elevation: 0,
                           pressElevation: 1,
                           side: BorderSide(
-                            color: AppColors.purple.withOpacity(0.3),
+                            color: AppColors.purple.withValues(alpha: 0.3),
                             width: 1,
                           ),
                           backgroundColor: isDark
-                              ? AppColors.purple.withOpacity(0.15)
+                              ? AppColors.purple.withValues(alpha: 0.15)
                               : Colors.white,
                           labelStyle: TextStyle(
                             fontSize: 11.5,
