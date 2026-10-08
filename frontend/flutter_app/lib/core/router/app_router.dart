@@ -35,8 +35,13 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Current Firebase user or Active Email Session user
       final user = authState.value;
+      final auth = ref.watch(firebaseAuthProvider);
       final activeEmail = ref.watch(activeUserEmailProvider);
-      final isLoggedIn = user != null || (activeEmail != null && activeEmail.isNotEmpty);
+
+      // When Firebase Auth is active, login status strictly requires a valid Firebase User
+      final isLoggedIn = auth != null
+          ? user != null
+          : (activeEmail != null && activeEmail.isNotEmpty);
 
       final isOnboardingRoute = path == '/onboarding';
       final isLoginRoute =

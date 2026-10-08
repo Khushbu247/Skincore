@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/localization/app_localizations.dart';
@@ -217,7 +220,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  // Google Login - Firebase Web (Untouched)
+  // Google Login - Multiplatform (Web + Android APK)
   Future<void> _loginWithGoogle() async {
     setState(() {
       _loading = true;
@@ -226,31 +229,85 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       final auth = ref.read(firebaseAuthProvider);
+      final prefs = ref.read(sharedPreferencesProvider);
 
       if (auth == null) {
         setState(() {
-          _error = 'Firebase is not initialized. Check your setup.';
+          _error = 'Firebase is not initialized. Please check your setup.';
         });
         return;
       }
 
-      final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-      googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
-      googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
+      UserCredential userCred;
 
-      await auth.signInWithPopup(googleProvider);
+      if (kIsWeb) {
+        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
+        googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 
-      if (mounted) {
-        context.goNamed('home');
+        userCred = await auth.signInWithPopup(googleProvider);
+      } else {
+        // --- NATIVE ANDROID GOOGLE SIGN-IN ---
+        final GoogleSignIn googleSignIn = GoogleSignIn(
+          serverClientId: '971335277078-0qlflr2hd3tu3cn5067lr07eoelo2qmu.apps.googleusercontent.com',
+        );
+
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+        if (googleUser == null) {
+          // User canceled the sign-in modal
+          if (mounted) {
+            setState(() {
+              _loading = false;
+            });
+          }
+          return;
+        }
+
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        userCred = await auth.signInWithCredential(credential);
       }
-    } on FirebaseAuthException catch (e) {
+
+      final authenticatedUser = userCred.user;
+      if (authenticatedUser != null &&
+          authenticatedUser.email != null &&
+          authenticatedUser.email!.isNotEmpty) {
+        await prefs.setString('active_user_email', authenticatedUser.email!);
+        ref.read(activeUserEmailProvider.notifier).state = authenticatedUser.email;
+
+        if (mounted) {
+          context.goNamed('home');
+        }
+      } else {
+        setState(() {
+          _error = 'Could not verify Firebase Google account. Please try again.';
+        });
+      }
+    } on PlatformException catch (pe) {
+      debugPrint('Google Sign-In PlatformException: ${pe.code} - ${pe.message}');
       setState(() {
-        _error = e.message ?? 'Google sign-in failed.';
+        if (pe.code == 'sign_in_failed' || pe.message?.contains('10') == true) {
+          _error =
+              'Google Sign-In configuration error (ApiException 10). Please verify SHA-1 fingerprint in Firebase Console.';
+        } else {
+          _error = 'Google Sign-In error: ${pe.message ?? pe.code}';
+        }
+      });
+    } on FirebaseAuthException catch (fe) {
+      debugPrint('FirebaseAuthException during Google Sign-In: ${fe.code} - ${fe.message}');
+      setState(() {
+        _error = fe.message ?? 'Firebase Google Sign-In failed (${fe.code}).';
       });
     } catch (e) {
       debugPrint('GOOGLE SIGN-IN ERROR: $e');
       setState(() {
-        _error = 'Google Sign-In Error: $e';
+        _error = 'Google Sign-In Error: ${e.toString().replaceAll("Exception: ", "")}';
       });
     } finally {
       if (mounted) {

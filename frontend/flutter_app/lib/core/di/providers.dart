@@ -34,18 +34,22 @@ final activeUserEmailProvider = StateProvider<String?>((ref) {
   return prefs.getString('active_user_email');
 });
 
-/// Centralized User ID Provider (works seamlessly with Firebase Auth & email sessions)
+/// Centralized User ID Provider (strictly uses Firebase Auth UID when available)
 final activeUserIdProvider = Provider<String>((ref) {
   final firebaseUser = ref.watch(authStateProvider).value;
   if (firebaseUser != null && firebaseUser.uid.isNotEmpty) {
     return firebaseUser.uid;
+  }
+  final auth = ref.watch(firebaseAuthProvider);
+  if (auth != null && firebaseUser == null) {
+    return '';
   }
   final email = ref.watch(activeUserEmailProvider);
   if (email != null && email.isNotEmpty) {
     final sanitized = email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
     return 'user_$sanitized';
   }
-  return 'user_demo_default';
+  return '';
 });
 
 /// Local storage provider
