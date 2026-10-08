@@ -9,6 +9,7 @@ import '../../features/dashboard/presentation/dashboard_shell.dart';
 import '../../features/dashboard/presentation/home_screen.dart';
 import '../../features/skin_scan/presentation/skin_scan_screen.dart';
 import '../../features/questionnaire/presentation/questionnaire_screen.dart';
+import '../../features/recommendations/presentation/product_recommendation_screen.dart';
 import '../../features/recommendations/presentation/recommendations_screen.dart';
 import '../../features/chatbot/presentation/chatbot_screen.dart';
 import '../../features/progress_tracker/presentation/progress_screen.dart';
@@ -122,10 +123,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/recommendations',
         name: 'recommendations',
-        builder: (context, state) {
-          final prediction = state.extra as String? ?? 'acne';
-          return RecommendationsScreen(prediction: prediction);
-        },
+        builder: (context, state) => const ProductRecommendationScreen(),
+      ),
+
+      GoRoute(
+        path: '/product_recommendations',
+        name: 'product_recommendations',
+        builder: (context, state) => const ProductRecommendationScreen(),
       ),
 
       // Dashboard

@@ -28,11 +28,14 @@ from backend.app.config import (
     IMAGE_SIZE,
     CLASS_NAMES
 )
+from backend.api.recommendation_router import recommendation_router
 import asyncio
 import time
 
 
 router = APIRouter()
+router.include_router(recommendation_router)
+
 
 UPLOAD_DIR = Path("backend/uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -238,4 +241,4 @@ async def chatbot_message(request: ChatRequest):
         status="success",
         model_used=model_used
     )
-
+
