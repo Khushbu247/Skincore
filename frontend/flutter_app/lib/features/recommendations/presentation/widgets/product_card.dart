@@ -53,7 +53,7 @@ class ProductCard extends ConsumerWidget {
               children: [
                 Icon(Icons.add_task_rounded, color: AppColors.purple),
                 SizedBox(width: 8),
-                Text('Add to My Routine'),
+                Expanded(child: Text('Add to My Routine', overflow: TextOverflow.ellipsis)),
               ],
             ),
             content: SingleChildScrollView(
@@ -73,12 +73,12 @@ class ProductCard extends ConsumerWidget {
                   const SizedBox(height: 16),
                   const Text('Select Routine Type:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
                   const SizedBox(height: 8),
-                  Row(
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
                     children: ['Morning', 'Evening', 'Custom'].map((type) {
                       final isSelected = routineType == type;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: ChoiceChip(
+                      return ChoiceChip(
                           label: Text(type, style: const TextStyle(fontSize: 11)),
                           selected: isSelected,
                           selectedColor: AppColors.purple,
@@ -98,8 +98,7 @@ class ProductCard extends ConsumerWidget {
                               });
                             }
                           },
-                        ),
-                      );
+                        );
                     }).toList(),
                   ),
                   const SizedBox(height: 16),

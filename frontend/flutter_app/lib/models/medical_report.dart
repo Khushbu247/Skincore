@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'prediction_result.dart';
 import 'hybrid_result.dart';
 
@@ -48,7 +49,6 @@ class MedicalReport {
     this.additionalFindings,
     this.safetyMessage,
   });
-
 
   factory MedicalReport.fromQuestionnaire({
     required String id,
@@ -312,9 +312,19 @@ class MedicalReport {
           .toList();
     }
 
+    final rawDt = json['dateTime'];
+    DateTime parsedDt;
+    if (rawDt is String) {
+      parsedDt = DateTime.tryParse(rawDt) ?? DateTime.now();
+    } else if (rawDt is Timestamp) {
+      parsedDt = rawDt.toDate();
+    } else {
+      parsedDt = DateTime.now();
+    }
+
     return MedicalReport(
       id: json['id'] ?? '',
-      dateTime: DateTime.tryParse(json['dateTime'] ?? '') ?? DateTime.now(),
+      dateTime: parsedDt,
       imagePath: json['imagePath'] ?? '',
       prediction: json['prediction'] ?? 'Unknown',
       confidence: (json['confidence'] ?? 0).toDouble(),

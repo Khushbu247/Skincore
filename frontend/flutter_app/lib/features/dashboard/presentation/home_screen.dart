@@ -487,12 +487,16 @@ class _CompletedQuestionnaireCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      l10n.translate('home_profile_completed'),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: AppColors.purple,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.8,
+                    Expanded(
+                      child: Text(
+                        l10n.translate('home_profile_completed'),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppColors.purple,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.8,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     GestureDetector(

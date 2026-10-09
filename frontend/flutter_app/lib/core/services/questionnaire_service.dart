@@ -136,6 +136,26 @@ class QuestionnaireService {
     }
   }
 
+  Map<String, dynamic> _sanitizeForJson(Map<String, dynamic> data) {
+    final result = <String, dynamic>{};
+    data.forEach((key, value) {
+      if (value is Timestamp) {
+        result[key] = value.toDate().toIso8601String();
+      } else if (value is Map) {
+        result[key] = _sanitizeForJson(Map<String, dynamic>.from(value));
+      } else if (value is List) {
+        result[key] = value.map((item) {
+          if (item is Timestamp) return item.toDate().toIso8601String();
+          if (item is Map) return _sanitizeForJson(Map<String, dynamic>.from(item));
+          return item;
+        }).toList();
+      } else {
+        result[key] = value;
+      }
+    });
+    return result;
+  }
+
   /// Check if user has already completed questionnaire
   Future<Map<String, dynamic>?> getQuestionnaireResponse(String uid) async {
     if (uid.isEmpty) return null;
@@ -156,7 +176,8 @@ class QuestionnaireService {
             .timeout(const Duration(seconds: 4))
             .then((doc) {
           if (doc.exists && doc.data() != null) {
-            _prefs.setString('$_localQuestionnairePrefix$uid', jsonEncode(doc.data()!));
+            final sanitized = _sanitizeForJson(doc.data()!);
+            _prefs.setString('$_localQuestionnairePrefix$uid', jsonEncode(sanitized));
           }
         }).catchError((_) {});
 
@@ -175,9 +196,9 @@ class QuestionnaireService {
           .timeout(const Duration(seconds: 4));
 
       if (doc.exists && doc.data() != null) {
-        final data = doc.data()!;
-        await _prefs.setString('$_localQuestionnairePrefix$uid', jsonEncode(data));
-        return data;
+        final sanitized = _sanitizeForJson(doc.data()!);
+        await _prefs.setString('$_localQuestionnairePrefix$uid', jsonEncode(sanitized));
+        return sanitized;
       }
     } catch (e) {
       debugPrint('Firestore getQuestionnaireResponse error for $uid: $e');
