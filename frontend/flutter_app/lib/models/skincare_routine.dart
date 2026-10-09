@@ -6,16 +6,18 @@ class SkincareRoutineItem {
   final String productName;
   final String routineType; // 'Morning', 'Evening', 'Custom'
   final String time; // e.g. '08:00 AM'
-  final bool isCompleted;
+  final bool isCompleted; // Deprecated fallback flag
+  final DateTime createdAt;
 
-  const SkincareRoutineItem({
+  SkincareRoutineItem({
     required this.id,
     required this.userId,
     required this.productName,
     required this.routineType,
     required this.time,
     this.isCompleted = false,
-  });
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
   SkincareRoutineItem copyWith({
     String? id,
@@ -24,6 +26,7 @@ class SkincareRoutineItem {
     String? routineType,
     String? time,
     bool? isCompleted,
+    DateTime? createdAt,
   }) {
     return SkincareRoutineItem(
       id: id ?? this.id,
@@ -32,6 +35,7 @@ class SkincareRoutineItem {
       routineType: routineType ?? this.routineType,
       time: time ?? this.time,
       isCompleted: isCompleted ?? this.isCompleted,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -43,6 +47,7 @@ class SkincareRoutineItem {
       'routineType': routineType,
       'time': time,
       'isCompleted': isCompleted,
+      'createdAt': createdAt.toIso8601String(),
     };
   }
 
@@ -54,6 +59,9 @@ class SkincareRoutineItem {
       routineType: map['routineType'] ?? 'Morning',
       time: map['time'] ?? '08:00 AM',
       isCompleted: map['isCompleted'] ?? false,
+      createdAt: map['createdAt'] != null
+          ? DateTime.tryParse(map['createdAt']) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 
@@ -61,4 +69,48 @@ class SkincareRoutineItem {
 
   factory SkincareRoutineItem.fromJson(String source) =>
       SkincareRoutineItem.fromMap(json.decode(source) as Map<String, dynamic>);
+}
+
+/// Date-stamped completion record for daily routine adherence tracking
+class RoutineCompletionLog {
+  final String id;
+  final String routineId;
+  final String userId;
+  final String dateString; // 'YYYY-MM-DD'
+  final DateTime completedAt;
+
+  const RoutineCompletionLog({
+    required this.id,
+    required this.routineId,
+    required this.userId,
+    required this.dateString,
+    required this.completedAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'routineId': routineId,
+      'userId': userId,
+      'dateString': dateString,
+      'completedAt': completedAt.toIso8601String(),
+    };
+  }
+
+  factory RoutineCompletionLog.fromMap(Map<String, dynamic> map) {
+    return RoutineCompletionLog(
+      id: map['id'] ?? '',
+      routineId: map['routineId'] ?? '',
+      userId: map['userId'] ?? '',
+      dateString: map['dateString'] ?? '',
+      completedAt: map['completedAt'] != null
+          ? DateTime.tryParse(map['completedAt']) ?? DateTime.now()
+          : DateTime.now(),
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory RoutineCompletionLog.fromJson(String source) =>
+      RoutineCompletionLog.fromMap(json.decode(source) as Map<String, dynamic>);
 }

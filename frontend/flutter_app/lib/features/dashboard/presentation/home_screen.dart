@@ -46,37 +46,45 @@ class HomeScreen extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.menu_rounded, size: 26),
-                        onPressed: () {
-                          Scaffold.of(context).openDrawer();
-                        },
-                        tooltip: 'Open Side Menu',
-                      ),
-                      const SizedBox(width: 4),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isReturningUser ? l10n.translate('home_welcome_back_tag') : l10n.translate('home_welcome_new_tag'),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppColors.purple,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                            ),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.menu_rounded, size: 26),
+                          onPressed: () {
+                            Scaffold.of(context).openDrawer();
+                          },
+                          tooltip: 'Open Side Menu',
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isReturningUser ? l10n.translate('home_welcome_back_tag') : l10n.translate('home_welcome_new_tag'),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: AppColors.purple,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.8,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                displayName,
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            displayName,
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                   GestureDetector(
                     onTap: () => Scaffold.of(context).openDrawer(),
@@ -183,7 +191,15 @@ class HomeScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(l10n.translate('home_latest_report_title'), style: theme.textTheme.titleMedium),
+                    Expanded(
+                      child: Text(
+                        l10n.translate('home_latest_report_title'),
+                        style: theme.textTheme.titleMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     GestureDetector(
                       onTap: () => context.goNamed('progress'),
                       child: Text(
@@ -211,7 +227,15 @@ class HomeScreen extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(l10n.translate('home_routine_section_title'), style: theme.textTheme.titleMedium),
+                  Expanded(
+                    child: Text(
+                      l10n.translate('home_routine_section_title'),
+                      style: theme.textTheme.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   GestureDetector(
                     onTap: () => context.pushNamed('recommendations'),
                     child: Text(
@@ -294,8 +318,8 @@ class HomeScreen extends ConsumerWidget {
                                 item: userRoutines[i],
                                 onToggle: () {
                                   ref
-                                      .read(skincareRoutineProvider.notifier)
-                                      .toggleComplete(userRoutines[i].id);
+                                      .read(routineCompletionLogsProvider.notifier)
+                                      .toggleCompletion(userRoutines[i].id);
                                 },
                               ),
                             ],
@@ -638,42 +662,51 @@ class _LatestReportCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: (isSerious ? AppColors.danger : AppColors.purple).withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isSerious ? Icons.warning_amber_rounded : Icons.verified_rounded,
-                        color: isSerious ? AppColors.danger : AppColors.purple,
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          report.id,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: (isSerious ? AppColors.danger : AppColors.purple).withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
                         ),
-                        Text(
-                          formattedDate,
-                          style: const TextStyle(
-                            color: AppColors.muted,
-                            fontSize: 11,
-                          ),
+                        child: Icon(
+                          isSerious ? Icons.warning_amber_rounded : Icons.verified_rounded,
+                          color: isSerious ? AppColors.danger : AppColors.purple,
+                          size: 18,
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              report.id,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              formattedDate,
+                              style: const TextStyle(
+                                color: AppColors.muted,
+                                fontSize: 11,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
@@ -695,13 +728,18 @@ class _LatestReportCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  formatClassName(report.prediction),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: isSerious ? AppColors.danger : null,
+                Expanded(
+                  child: Text(
+                    formatClassName(report.prediction),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isSerious ? AppColors.danger : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   report.riskLevel,
                   style: TextStyle(
@@ -729,7 +767,7 @@ class _LatestReportCard extends StatelessWidget {
   }
 }
 
-class _DynamicRoutineRow extends StatelessWidget {
+class _DynamicRoutineRow extends ConsumerWidget {
   final SkincareRoutineItem item;
   final VoidCallback onToggle;
 
@@ -739,7 +777,11 @@ class _DynamicRoutineRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final logs = ref.watch(routineCompletionLogsProvider);
+    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final isCompletedToday = logs.any((l) => l.routineId == item.id && l.dateString == todayStr);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -750,14 +792,14 @@ class _DynamicRoutineRow extends StatelessWidget {
               width: 22,
               height: 22,
               decoration: BoxDecoration(
-                color: item.isCompleted ? AppColors.success : Colors.transparent,
+                color: isCompletedToday ? AppColors.success : Colors.transparent,
                 border: Border.all(
-                  color: item.isCompleted ? AppColors.success : AppColors.mutedLight,
+                  color: isCompletedToday ? AppColors.success : AppColors.mutedLight,
                   width: 1.6,
                 ),
                 borderRadius: BorderRadius.circular(7),
               ),
-              child: item.isCompleted
+              child: isCompletedToday
                   ? const Icon(Icons.check, size: 14, color: Colors.white)
                   : null,
             ),
@@ -772,8 +814,8 @@ class _DynamicRoutineRow extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13.5,
-                    decoration: item.isCompleted ? TextDecoration.lineThrough : null,
-                    color: item.isCompleted ? AppColors.muted : null,
+                    decoration: isCompletedToday ? TextDecoration.lineThrough : null,
+                    color: isCompletedToday ? AppColors.muted : null,
                   ),
                 ),
                 Text(
