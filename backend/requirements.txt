@@ -31,6 +31,3 @@ pydantic==2.13.4
 typing-extensions==4.16.0
 
 # CORS support comes with FastAPI
-
-#python
-python==3.10.11
