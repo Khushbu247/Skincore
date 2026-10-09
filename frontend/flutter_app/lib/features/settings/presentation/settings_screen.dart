@@ -15,7 +15,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final themeMode = ref.watch(themeModeProvider);
+
     final activeEmail = ref.watch(activeUserEmailProvider);
     final user = ref.watch(authStateProvider).valueOrNull;
     final l10n = AppLocalizations.of(context);
@@ -96,8 +96,8 @@ class SettingsScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   SwitchListTile(
-                    title: Text(l10n.translate('settings_dark_mode')),
-                    value: themeMode == ThemeMode.dark,
+                    title: Text(theme.brightness == Brightness.dark ? 'Dark Mode' : 'Light Mode'),
+                    value: theme.brightness == Brightness.dark,
                     onChanged: (_) => ref.read(themeModeProvider.notifier).toggle(),
                     activeTrackColor: AppColors.purple,
                   ),

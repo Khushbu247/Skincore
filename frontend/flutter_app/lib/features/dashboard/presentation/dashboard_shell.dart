@@ -38,7 +38,7 @@ class DashboardShell extends StatelessWidget {
     return Scaffold(
       drawer: const AppDrawer(),
       body: child,
-      floatingActionButton: Container(
+      floatingActionButton: currentIndex == 2 ? null : Container(
         width: 60,
         height: 60,
         decoration: const BoxDecoration(gradient: AppColors.brandGradient, shape: BoxShape.circle),

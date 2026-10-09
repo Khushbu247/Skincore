@@ -491,9 +491,10 @@ class _ResultView extends StatelessWidget {
     final assessmentStateDisplay = hybridResult?.assessmentStateDisplay ?? 'Condition Detected';
     final assessmentState = hybridResult?.assessmentState ?? 'condition';
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Safety Warning Banner
@@ -743,21 +744,37 @@ class _ResultView extends StatelessWidget {
             onPressed: () => context.pushNamed('product_recommendations'),
           ),
           const SizedBox(height: 10),
-          OutlinedButton.icon(
-            onPressed: () => context.goNamed('progress'),
-            icon: const Icon(Icons.assignment_outlined, size: 18),
-            label: const Text('View Medical Report in Track History'),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => context.goNamed('progress'),
+              icon: const Icon(Icons.assignment_outlined, size: 18),
+              label: const Text(
+                'View Medical Report in Track History',
+                textAlign: TextAlign.center,
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
           ),
           const SizedBox(height: 10),
-          OutlinedButton(
-            onPressed: onAnalyzeAnother,
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.center_focus_strong_rounded, size: 18),
-                SizedBox(width: 8),
-                Text('Analyze Another Image'),
-              ],
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onAnalyzeAnother,
+              icon: const Icon(Icons.center_focus_strong_rounded, size: 18),
+              label: const Text(
+                'Analyze Another Image',
+                textAlign: TextAlign.center,
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -767,7 +784,7 @@ class _ResultView extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 }
 

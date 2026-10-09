@@ -139,7 +139,7 @@ class ProgressAnalyticsTab extends ConsumerWidget {
     }
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       children: [
         // ==========================================
         // SECTION 1: COMPACT OVERVIEW METRIC CARDS
@@ -1038,14 +1038,7 @@ class _QuestionnaireInsightsCard extends StatelessWidget {
                 badgeColor: AppColors.rose,
                 isDark: isDark,
               ),
-              const SizedBox(height: 8),
-              _ProfileDetailRow(
-                icon: Icons.track_changes_rounded,
-                label: 'Skincare Goal',
-                value: primaryGoal,
-                badgeColor: const Color(0xFF10B981),
-                isDark: isDark,
-              ),
+
               const SizedBox(height: 8),
               _ProfileDetailRow(
                 icon: Icons.wb_sunny_outlined,
@@ -1197,28 +1190,40 @@ class _ProfileDetailRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: badgeColor),
-          const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(color: AppColors.muted, fontSize: 11.5, fontWeight: FontWeight.w600),
+            flex: 2,
+            child: Row(
+              children: [
+                Icon(icon, size: 16, color: badgeColor),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(color: AppColors.muted, fontSize: 11.5, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
             ),
           ),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: badgeColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                value,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  color: badgeColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 3,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: badgeColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  value,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: badgeColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
                 ),
               ),
             ),

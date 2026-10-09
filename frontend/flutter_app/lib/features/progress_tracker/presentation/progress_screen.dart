@@ -721,7 +721,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
                 children: [
                   // TAB 1: ROUTINE PROGRESS (DEFAULT GROUP 2 VIEW)
                   ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                     children: [
                       // ==========================================
                       // SECTION 1: ROUTINE ADHERENCE DASHBOARD
@@ -1088,35 +1088,33 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
                                         ],
                                       ),
                                       const SizedBox(height: 14),
-                                      Row(
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        crossAxisAlignment: WrapCrossAlignment.center,
                                         children: [
-                                          Expanded(
-                                            child: OutlinedButton.icon(
-                                              onPressed: () => _showReportDetails(context, report),
-                                              style: OutlinedButton.styleFrom(
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                              ),
-                                              icon: const Icon(Icons.remove_red_eye_outlined, size: 16),
-                                              label: const Text('View Report'),
+                                          OutlinedButton.icon(
+                                            onPressed: () => _showReportDetails(context, report),
+                                            style: OutlinedButton.styleFrom(
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                                             ),
+                                            icon: const Icon(Icons.remove_red_eye_outlined, size: 16),
+                                            label: const Text('View Report', style: TextStyle(fontSize: 12)),
                                           ),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: ElevatedButton.icon(
-                                              onPressed: () {
-                                                final userName = user?.displayName ?? 'Patient';
-                                                PdfReportService.generateAndDownloadPdf(report, userName: userName);
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: AppColors.purple,
-                                                foregroundColor: Colors.white,
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                              ),
-                                              icon: const Icon(Icons.download_rounded, size: 16),
-                                              label: const Text('Download PDF'),
+                                          ElevatedButton.icon(
+                                            onPressed: () {
+                                              final userName = user?.displayName ?? 'Patient';
+                                              PdfReportService.generateAndDownloadPdf(report, userName: userName);
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: AppColors.purple,
+                                              foregroundColor: Colors.white,
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                                             ),
+                                            icon: const Icon(Icons.download_rounded, size: 16),
+                                            label: const Text('Download PDF', style: TextStyle(fontSize: 12)),
                                           ),
                                           IconButton(
                                             icon: const Icon(Icons.delete_outline_rounded, size: 20, color: AppColors.muted),
