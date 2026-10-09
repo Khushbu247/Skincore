@@ -29,6 +29,8 @@ class RegionAnalysisCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (visualDescription.isEmpty && observations.isEmpty && additionalFindings.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -61,23 +63,23 @@ class RegionAnalysisCard extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 visualDescription,
-                style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black87),
+                style: TextStyle(fontSize: 14, height: 1.4, color: isDark ? Colors.white70 : Colors.black87),
               ),
             ],
             if (observations.isNotEmpty) ...[
               const SizedBox(height: 14),
-              const Text(
+              Text(
                 'Region breakdown:',
-                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: Colors.black87),
+                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : Colors.black87),
               ),
               const SizedBox(height: 8),
               ...observations.map((obs) => Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
+                      color: isDark ? Theme.of(context).colorScheme.surfaceContainerHighest : Colors.grey.shade50,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade200),
+                      border: Border.all(color: isDark ? Theme.of(context).dividerColor : Colors.grey.shade200),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,7 +103,7 @@ class RegionAnalysisCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             obs.observation,
-                            style: const TextStyle(fontSize: 13, color: Colors.black87),
+                            style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black87),
                           ),
                         ),
                       ],
@@ -110,9 +112,9 @@ class RegionAnalysisCard extends StatelessWidget {
             ],
             if (additionalFindings.isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Additional Findings:',
-                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: Colors.black87),
+                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : Colors.black87),
               ),
               const SizedBox(height: 6),
               ...additionalFindings.map((finding) => Padding(
@@ -122,7 +124,7 @@ class RegionAnalysisCard extends StatelessWidget {
                       children: [
                         const Text('• ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo)),
                         Expanded(
-                          child: Text(finding, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                          child: Text(finding, style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black87)),
                         ),
                       ],
                     ),

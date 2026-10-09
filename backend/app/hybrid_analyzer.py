@@ -38,15 +38,20 @@ def analyze_hybrid(
     }
 
     # Determine 3-state assessment classification
-    assessment_state, assessment_state_display = determine_assessment_state(
-        primary_prediction=primary_prediction,
-        probabilities=formatted_probs,
-        groq_analysis=groq_result
-    )
-
-    if assessment_state == "normal_appearing":
+    if predicted_class == "normal_skin":
+        assessment_state, assessment_state_display = "normal_appearing", "Normal / Healthy Skin"
         primary_prediction["condition"] = "normal_skin"
         primary_prediction["condition_display"] = "Normal / Healthy Skin"
+    else:
+        assessment_state, assessment_state_display = determine_assessment_state(
+            primary_prediction=primary_prediction,
+            probabilities=formatted_probs,
+            groq_analysis=groq_result
+        )
+
+        if assessment_state == "normal_appearing":
+            primary_prediction["condition"] = "normal_skin"
+            primary_prediction["condition_display"] = "Normal / Healthy Skin"
 
     # Serious condition safety handling
     serious_prob = float(formatted_probs.get("serious_condition", 0.0))

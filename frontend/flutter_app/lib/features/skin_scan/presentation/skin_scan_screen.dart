@@ -239,6 +239,7 @@ class _CaptureView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -255,8 +256,8 @@ class _CaptureView extends StatelessWidget {
               height: 230,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFDCC7E4), width: 2, style: BorderStyle.solid),
-                color: const Color(0xFFFCF8FD),
+                border: Border.all(color: isDark ? AppColors.lineDark : const Color(0xFFDCC7E4), width: 2, style: BorderStyle.solid),
+                color: isDark ? AppColors.surfaceDark : const Color(0xFFFCF8FD),
               ),
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -288,18 +289,18 @@ class _CaptureView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF6E9),
+              color: isDark ? AppColors.surfaceDark : const Color(0xFFFFF6E9),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFF5DFB1)),
+              border: Border.all(color: isDark ? AppColors.lineDark : const Color(0xFFF5DFB1)),
             ),
-            child: const Row(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('⚠️ '),
+                const Text('⚠️ '),
                 Expanded(
                   child: Text(
                     'SkinCore provides AI-assisted, preliminary classification only and is not a medical diagnosis. Always consult a certified dermatologist.',
-                    style: TextStyle(color: Color(0xFF8A6416), fontSize: 12, height: 1.4),
+                    style: TextStyle(color: isDark ? Colors.white70 : const Color(0xFF8A6416), fontSize: 12, height: 1.4),
                   ),
                 ),
               ],
@@ -432,12 +433,14 @@ class _AnalyzingView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Text(
-                      steps[i],
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: done ? AppColors.ink : AppColors.mutedLight,
-                        fontWeight: done ? FontWeight.w600 : FontWeight.w400,
+                    Flexible(
+                      child: Text(
+                        steps[i],
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: done ? AppColors.ink : AppColors.mutedLight,
+                          fontWeight: done ? FontWeight.w600 : FontWeight.w400,
+                        ),
                       ),
                     ),
                   ],
@@ -481,6 +484,7 @@ class _ResultView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isSerious = result.prediction.toLowerCase().contains('serious') ||
         (hybridResult?.needsProfessionalReview ?? false);
     final safetyMsg = hybridResult?.safetyMessage;
@@ -546,13 +550,14 @@ class _ResultView extends StatelessWidget {
                       if (hybridResult?.skinType.estimatedType != null &&
                           hybridResult?.skinType.estimatedType != 'unknown')
                         Chip(
-                          avatar: const Icon(Icons.water_drop_outlined, size: 14, color: Colors.blue),
+                          avatar: Icon(Icons.water_drop_outlined, size: 14, color: isDark ? Colors.blue.shade300 : Colors.blue),
                           label: Text(
                             'Skin: ${hybridResult!.skinType.estimatedType.toUpperCase()}',
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.blue.shade100 : Colors.blue.shade900),
                           ),
-                          backgroundColor: Colors.blue.shade50,
+                          backgroundColor: isDark ? Colors.blue.withValues(alpha: 0.15) : Colors.blue.shade50,
                           visualDensity: VisualDensity.compact,
+                          side: BorderSide.none,
                         ),
                     ],
                   ),
@@ -560,25 +565,28 @@ class _ResultView extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'PRIMARY CLASSIFICATION',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: isSerious ? AppColors.danger : AppColors.rose,
-                              fontWeight: FontWeight.w700,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'PRIMARY CLASSIFICATION',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: isSerious ? AppColors.danger : AppColors.rose,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            formatClassName(result.prediction),
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              color: isSerious ? AppColors.danger : null,
+                            const SizedBox(height: 4),
+                            Text(
+                              formatClassName(result.prediction),
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                color: isSerious ? AppColors.danger : null,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
@@ -602,7 +610,7 @@ class _ResultView extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: result.confidence / 100,
                       minHeight: 8,
-                      backgroundColor: const Color(0xFFF0E8F2),
+                      backgroundColor: isDark ? AppColors.lineDark : const Color(0xFFF0E8F2),
                       valueColor: AlwaysStoppedAnimation(
                         isSerious ? AppColors.danger : AppColors.rose,
                       ),
@@ -645,7 +653,7 @@ class _ResultView extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       hybridResult!.overallAssessment,
-                      style: const TextStyle(fontSize: 13.5, height: 1.4, color: Colors.black87),
+                      style: TextStyle(fontSize: 13.5, height: 1.4, color: isDark ? Colors.white70 : Colors.black87),
                     ),
                   ],
                 ),

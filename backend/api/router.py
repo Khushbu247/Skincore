@@ -179,20 +179,28 @@ async def predict_hybrid(file: UploadFile = File(...)):
         start_time = time.time()
         file_path_str = str(file_path)
 
-        # Run MobileNetV2 inference and Groq Vision analysis concurrently
-        mobilenet_task = asyncio.to_thread(predict_image, file_path_str)
-        groq_task = asyncio.to_thread(analyze_skin_image_groq, file_path_str)
+        # Run Groq Vision analysis first for potential fast-path
+        groq_res = await asyncio.to_thread(analyze_skin_image_groq, file_path_str)
 
-        mobilenet_res, groq_res = await asyncio.gather(mobilenet_task, groq_task)
+        if groq_res.get("available") and groq_res.get("is_normal_appearing") is True and groq_res.get("red_flags_present") is False:
+            mobilenet_res = {
+                "prediction": "normal_skin",
+                "confidence": 99.0,
+                "probabilities": {"normal_skin": 99.0, "acne": 0.0, "eczema_rash": 0.0, "pigmentation": 0.0, "serious_condition": 0.0},
+                "processing_time_ms": 0.0,
+                "model_version": "bypassed"
+            }
+            gradcam_res = None
+        else:
+            mobilenet_res = await asyncio.to_thread(predict_image, file_path_str)
+            # Determine class index for optional Grad-CAM
+            pred_class_name = mobilenet_res.get("prediction", "acne")
+            class_idx = 0
+            if pred_class_name in CLASS_NAMES:
+                class_idx = CLASS_NAMES.index(pred_class_name)
 
-        # Determine class index for optional Grad-CAM
-        pred_class_name = mobilenet_res.get("prediction", "acne")
-        class_idx = 0
-        if pred_class_name in CLASS_NAMES:
-            class_idx = CLASS_NAMES.index(pred_class_name)
-
-        # Non-blocking Grad-CAM task
-        gradcam_res = await asyncio.to_thread(generate_gradcam_heatmap, file_path_str, class_idx)
+            # Non-blocking Grad-CAM task
+            gradcam_res = await asyncio.to_thread(generate_gradcam_heatmap, file_path_str, class_idx)
 
         total_time_ms = (time.time() - start_time) * 1000.0
 
