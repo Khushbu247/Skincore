@@ -315,22 +315,8 @@ class PdfReportService {
       // Web: Direct Chrome download via Blob URL anchor (No print dialog, No share sheet)
       await Printing.sharePdf(bytes: bytes, filename: fileName);
     } else {
-      // Mobile: Save directly to public Downloads folder or storage
-      try {
-        io.Directory? targetDir;
-        if (io.Platform.isAndroid) {
-          final pubDownload = io.Directory('/storage/emulated/0/Download');
-          if (pubDownload.existsSync()) {
-            targetDir = pubDownload;
-          }
-        }
-        targetDir ??= io.Directory.systemTemp;
-        final file = io.File('${targetDir.path}/$fileName');
-        await file.writeAsBytes(bytes);
-      } catch (_) {
-        // Fallback share if write permission is restricted
-        await Printing.sharePdf(bytes: bytes, filename: fileName);
-      }
+      // Mobile: Safely share/save via native share sheet (handles permissions automatically)
+      await Printing.sharePdf(bytes: bytes, filename: fileName);
     }
   }
 }

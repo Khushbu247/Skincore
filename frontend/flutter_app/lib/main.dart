@@ -9,6 +9,7 @@ import 'core/di/providers.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,7 @@ Future<void> main() async {
   }
 
   final prefs = await SharedPreferences.getInstance();
+  await NotificationService().init();
 
   runApp(
     ProviderScope(

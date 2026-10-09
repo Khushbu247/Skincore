@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/di/providers.dart';
 import '../models/skincare_routine.dart';
+import '../core/services/notification_service.dart';
 
 class SmartNotificationsNotifier extends Notifier<bool> {
   static String _prefKey(String userId) => 'smart_notifications_enabled_$userId';
@@ -14,6 +15,12 @@ class SmartNotificationsNotifier extends Notifier<bool> {
   }
 
   Future<void> setEnabled(bool value) async {
+    final hasPerm = await NotificationService().requestPermissions();
+    if (value && !hasPerm) {
+      // Permission denied
+      return;
+    }
+
     state = value;
     final userId = ref.read(activeUserIdProvider);
     final prefs = ref.read(sharedPreferencesProvider);
@@ -23,15 +30,18 @@ class SmartNotificationsNotifier extends Notifier<bool> {
       debugPrint('Smart Notifications ENABLED for user $userId');
     } else {
       debugPrint('Smart Notifications DISABLED for user $userId');
+      await NotificationService().cancelAll();
     }
   }
 
   void syncRoutineReminders(List<SkincareRoutineItem> routines) {
     if (!state) {
       debugPrint('Smart Notifications are OFF. Skipping routine reminder scheduling.');
+      NotificationService().cancelAll();
       return;
     }
     debugPrint('Scheduled ${routines.length} skincare routine reminders for current user.');
+    NotificationService().scheduleRoutineReminders(routines);
   }
 }
 
