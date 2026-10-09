@@ -1,22 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../core/di/providers.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
-
-class _ChatMessageItem {
-  final String text;
-  final bool isUser;
-  final DateTime timestamp;
-
-  const _ChatMessageItem({
-    required this.text,
-    required this.isUser,
-    required this.timestamp,
-  });
-}
+import '../data/chat_repository.dart';
+import '../domain/chat_models.dart';
+import 'widgets/chat_history_drawer.dart';
 
 class ChatbotScreen extends ConsumerStatefulWidget {
   const ChatbotScreen({super.key});
@@ -31,21 +21,29 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   final FocusNode _inputFocusNode = FocusNode();
   bool _isThinking = false;
 
-  final List<_ChatMessageItem> _messages = [];
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  String? _currentSessionId;
+  String _currentSessionTitle = 'New Chat';
+  List<ChatMessage> _messages = [];
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_messages.isEmpty) {
-      final l10n = AppLocalizations.of(context);
-      _messages.add(
-        _ChatMessageItem(
-          text: "${l10n.translate('chat_welcome_title')}\n\n${l10n.translate('chat_welcome_sub')}",
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
+      _addWelcomeMessage();
     }
+  }
+
+  void _addWelcomeMessage() {
+    final l10n = AppLocalizations.of(context);
+    _messages = [
+      ChatMessage(
+        text: "${l10n.translate('chat_welcome_title')}\n\n${l10n.translate('chat_welcome_sub')}",
+        isUser: false,
+        timestamp: DateTime.now(),
+      )
+    ];
   }
 
   @override
@@ -81,6 +79,45 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     return text.trim();
   }
 
+  void _startNewChat() {
+    setState(() {
+      _currentSessionId = null;
+      _currentSessionTitle = 'New Chat';
+      _addWelcomeMessage();
+    });
+  }
+
+  void _loadSession(ChatSession session) {
+    setState(() {
+      _currentSessionId = session.id;
+      _currentSessionTitle = session.title;
+      _messages = List.from(session.messages);
+    });
+    _scrollToBottom();
+  }
+
+  Future<void> _saveSession() async {
+    if (_messages.length <= 1) return; // Only welcome message
+
+    if (_currentSessionId == null) {
+      _currentSessionId = DateTime.now().microsecondsSinceEpoch.toString();
+      
+      // Auto-generate title from the first user message
+      final firstUserMsg = _messages.firstWhere((m) => m.isUser, orElse: () => _messages.first);
+      final rawTitle = firstUserMsg.text.split('\n').first;
+      _currentSessionTitle = rawTitle.length > 30 ? '${rawTitle.substring(0, 30)}...' : rawTitle;
+    }
+
+    final session = ChatSession(
+      id: _currentSessionId!,
+      title: _currentSessionTitle,
+      updatedAt: DateTime.now(),
+      messages: _messages,
+    );
+    
+    await ref.read(chatRepositoryProvider).saveChatSession(session);
+  }
+
   Future<void> _sendMessage([String? presetText]) async {
     final String query = (presetText ?? _textController.text).trim();
     if (query.isEmpty || _isThinking) return;
@@ -93,7 +130,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
     setState(() {
       _messages.add(
-        _ChatMessageItem(
+        ChatMessage(
           text: query,
           isUser: true,
           timestamp: DateTime.now(),
@@ -103,6 +140,8 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     });
 
     _scrollToBottom();
+    // Save state after user message
+    _saveSession();
 
     final history = _messages
         .where((m) => m.text.isNotEmpty)
@@ -133,7 +172,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       if (mounted) {
         setState(() {
           _messages.add(
-            _ChatMessageItem(
+            ChatMessage(
               text: cleanReply,
               isUser: false,
               timestamp: DateTime.now(),
@@ -142,12 +181,14 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
           _isThinking = false;
         });
         _scrollToBottom();
+        // Save state after assistant message
+        _saveSession();
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _messages.add(
-            _ChatMessageItem(
+            ChatMessage(
               text: l10n.translate('chat_offline_fallback'),
               isUser: false,
               timestamp: DateTime.now(),
@@ -175,6 +216,12 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     ];
 
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: ChatHistoryDrawer(
+        currentSessionId: _currentSessionId ?? '',
+        onSessionSelected: _loadSession,
+        onNewChat: _startNewChat,
+      ),
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -193,52 +240,54 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.translate('chat_appbar_title'),
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: const BoxDecoration(
-                        color: AppColors.success,
-                        shape: BoxShape.circle,
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.translate('chat_appbar_title'),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      l10n.translate('chat_active_status'),
-                      style: const TextStyle(fontSize: 10.5, color: AppColors.success),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          l10n.translate('chat_active_status'),
+                          style: const TextStyle(fontSize: 10.5, color: AppColors.success),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, size: 20),
-            tooltip: l10n.translate('chat_clear_tooltip'),
-            onPressed: () {
-              setState(() {
-                _messages.clear();
-                _messages.add(
-                  _ChatMessageItem(
-                    text: l10n.translate('chat_cleared_msg'),
-                    isUser: false,
-                    timestamp: DateTime.now(),
-                  ),
-                );
-              });
-            },
+            icon: const Icon(Icons.history_rounded, size: 20),
+            tooltip: 'Chat History',
+            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
           ),
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline, size: 20),
+            tooltip: 'New Chat',
+            onPressed: _startNewChat,
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
@@ -263,13 +312,16 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                     children: [
                       const Icon(Icons.help_outline_rounded, size: 14, color: AppColors.purple),
                       const SizedBox(width: 4),
-                      Text(
-                        l10n.translate('chat_faq_title'),
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.purple,
-                          letterSpacing: 0.2,
+                      Expanded(
+                        child: Text(
+                          l10n.translate('chat_faq_title'),
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.purple,
+                            letterSpacing: 0.2,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -411,7 +463,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     );
   }
 
-  Widget _buildMessageBubble(_ChatMessageItem msg, bool isDark) {
+  Widget _buildMessageBubble(ChatMessage msg, bool isDark) {
     return Align(
       alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
@@ -463,7 +515,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                       ? null
                       : [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                          color: Colors.black.withOpacity(0.04),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -508,36 +560,41 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                 size: 18,
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.surfaceDark : Colors.white,
-                border: Border.all(
-                  color: isDark ? AppColors.lineDark : AppColors.lineLight,
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.surfaceDark : Colors.white,
+                  border: Border.all(
+                    color: isDark ? AppColors.lineDark : AppColors.lineLight,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.purple),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.purple),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'SkinCore AI is thinking...',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: isDark ? AppColors.mutedLight : AppColors.muted,
-                      fontStyle: FontStyle.italic,
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        'SkinCore AI is thinking...',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: isDark ? AppColors.mutedLight : AppColors.muted,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
