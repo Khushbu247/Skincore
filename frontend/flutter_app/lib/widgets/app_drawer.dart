@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../core/di/providers.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/theme/app_colors.dart';
+import '../core/widgets/logout_confirmation_dialog.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -166,22 +167,7 @@ class AppDrawer extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.all(16),
               child: OutlinedButton.icon(
-                onPressed: () async {
-                  final prefs = ref.read(sharedPreferencesProvider);
-                  await prefs.remove('active_user_email');
-                  ref.read(activeUserEmailProvider.notifier).state = null;
-
-                  final auth = ref.read(firebaseAuthProvider);
-                  if (auth != null) {
-                    try {
-                      await auth.signOut();
-                    } catch (_) {}
-                  }
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    context.goNamed('login');
-                  }
-                },
+                onPressed: () => showLogoutConfirmationDialog(context, ref),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 44),
                   side: BorderSide(color: AppColors.danger.withValues(alpha: 0.5)),

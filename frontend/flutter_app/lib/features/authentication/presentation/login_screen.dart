@@ -59,157 +59,64 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final prefs = ref.read(sharedPreferencesProvider);
       final auth = ref.read(firebaseAuthProvider);
 
-      // Load persistent credentials store
-      final String rawStore = prefs.getString('user_credentials_store') ?? '{}';
-      Map<String, dynamic> userStore = {};
-      try {
-        userStore = jsonDecode(rawStore) as Map<String, dynamic>;
-      } catch (_) {}
+      if (auth == null) {
+        setState(() {
+          _error = 'Firebase Authentication service is unavailable. Please check your setup.';
+        });
+        return;
+      }
 
       if (_isSignUpMode) {
-        // --- NEW USER SIGN UP ---
-        if (userStore.containsKey(email)) {
-          setState(() {
-            _error = 'An account with this email already exists. Please log in.';
-            _loading = false;
-          });
-          return;
-        }
+        // --- NEW USER SIGN UP VIA FIREBASE AUTH ---
+        try {
+          final userCred = await auth.createUserWithEmailAndPassword(email: email, password: password);
+          if (userCred.user != null) {
+            await prefs.setString('active_user_email', email);
+            ref.read(activeUserEmailProvider.notifier).state = email;
+            await prefs.remove('user_credentials_store');
 
-        // Try Firebase Auth Registration if configured
-        if (auth != null) {
-          try {
-            await auth.createUserWithEmailAndPassword(email: email, password: password);
-            // Sign out of Firebase immediately so user performs explicit login
-            await auth.signOut();
-          } on FirebaseAuthException catch (fe) {
-            if (fe.code == 'email-already-in-use') {
-              setState(() {
-                _error = 'This email is already registered in Firebase. Please log in.';
-                _loading = false;
-              });
-              return;
+            if (mounted) {
+              context.goNamed('home');
             }
-          } catch (_) {}
-        }
-
-        // Save credential to local persistent user store
-        userStore[email] = password;
-        await prefs.setString('user_credentials_store', jsonEncode(userStore));
-
-        if (mounted) {
+          }
+        } on FirebaseAuthException catch (fe) {
           setState(() {
-            _loading = false;
-          });
-
-          // Show proper Success Card Modal
-          await showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (dialogCtx) => AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              contentPadding: const EdgeInsets.all(24),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.check_circle_rounded,
-                      color: AppColors.success,
-                      size: 36,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Account Created Successfully!',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'You can now log into your account.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.muted,
-                        ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(dialogCtx),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.purple,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text(
-                        'Log In Now',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-
-          // Reset forms and transition to Login Mode
-          setState(() {
-            _isSignUpMode = false;
-            _passwordCtrl.clear();
-            _confirmPasswordCtrl.clear();
-            _error = null;
+            _error = switch (fe.code) {
+              'email-already-in-use' => 'An account with this email already exists. Please log in.',
+              'invalid-email' => 'The email address format is invalid.',
+              'weak-password' => 'Password is too weak. Please use at least 6 characters.',
+              _ => 'Signup failed: ${fe.message ?? fe.code}',
+            };
           });
         }
       } else {
-        // --- LOG IN MODE ---
-        bool authenticated = false;
+        // --- EXISTING USER LOG IN VIA FIREBASE AUTH ---
+        try {
+          final userCred = await auth.signInWithEmailAndPassword(email: email, password: password);
+          if (userCred.user != null) {
+            await prefs.setString('active_user_email', email);
+            ref.read(activeUserEmailProvider.notifier).state = email;
+            await prefs.remove('user_credentials_store');
 
-        // 1. Check local persistent store
-        if (userStore.containsKey(email) && userStore[email] == password) {
-          authenticated = true;
-        }
-
-        // 2. Try Firebase Auth Sign In if local store didn't match or to sync Firebase user
-        if (auth != null) {
-          try {
-            final userCred = await auth.signInWithEmailAndPassword(email: email, password: password);
-            if (userCred.user != null) {
-              authenticated = true;
+            if (mounted) {
+              context.goNamed('home');
             }
-          } catch (_) {}
-        }
-
-        if (authenticated) {
-          await prefs.setString('active_user_email', email);
-          ref.read(activeUserEmailProvider.notifier).state = email;
-
-          if (mounted) {
-            context.goNamed('home');
           }
-        } else {
+        } on FirebaseAuthException catch (fe) {
           setState(() {
-            _error = userStore.containsKey(email)
-                ? 'Incorrect password. Please try again.'
-                : 'Account not found. Click "Sign up" below to create a new member account.';
+            _error = switch (fe.code) {
+              'user-not-found' || 'invalid-credential' => 'Account not found or invalid credentials. Click "Sign up" below to create an account.',
+              'wrong-password' => 'Incorrect password. Please try again.',
+              'invalid-email' => 'The email address format is invalid.',
+              'user-disabled' => 'This account has been disabled. Please contact support.',
+              _ => 'Authentication failed: ${fe.message ?? fe.code}',
+            };
           });
         }
       }
     } catch (e) {
       setState(() {
-        _error = 'Authentication failed: ${e.toString().replaceAll("Exception: ", "")}';
+        _error = 'Authentication error: ${e.toString().replaceAll("Exception: ", "")}';
       });
     } finally {
       if (mounted) {

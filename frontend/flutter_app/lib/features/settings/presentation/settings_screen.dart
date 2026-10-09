@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/logout_confirmation_dialog.dart';
 
 import '../../../providers/notification_provider.dart';
 import '../../../providers/skincare_routine_provider.dart';
@@ -153,21 +153,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             OutlinedButton.icon(
-              onPressed: () async {
-                final prefs = ref.read(sharedPreferencesProvider);
-                await prefs.remove('active_user_email');
-                ref.read(activeUserEmailProvider.notifier).state = null;
-
-                final auth = ref.read(firebaseAuthProvider);
-                if (auth != null) {
-                  try {
-                    await auth.signOut();
-                  } catch (_) {}
-                }
-                if (context.mounted) {
-                  context.goNamed('login');
-                }
-              },
+              onPressed: () => showLogoutConfirmationDialog(context, ref),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppColors.danger),
                 foregroundColor: AppColors.danger,
