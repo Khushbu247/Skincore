@@ -64,6 +64,14 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/skincore_logo.jpg"
+  adaptive_icon_background: "#E8B2C1" # using the pink bg of the logo just in case
+  adaptive_icon_foreground: "assets/images/skincore_logo.jpg"
 
 flutter:
   uses-material-design: true

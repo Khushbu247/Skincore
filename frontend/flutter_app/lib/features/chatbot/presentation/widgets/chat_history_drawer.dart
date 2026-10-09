@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -125,10 +126,10 @@ class ChatHistoryDrawer extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Chat'),
-        content: const Text('Are you sure you want to delete this chat conversation?'),
+        title: Text(AppLocalizations.of(context).translate('chat_delete_title')),
+        content: Text(AppLocalizations.of(context).translate('chat_delete_body')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalizations.of(context).translate('common_cancel'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete', style: TextStyle(color: AppColors.rose)),
@@ -145,10 +146,10 @@ class ChatHistoryDrawer extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Clear All History'),
-        content: const Text('This will delete all your chat conversations permanently. Are you sure?'),
+        title: Text(AppLocalizations.of(context).translate('chat_clear_history_title')),
+        content: Text(AppLocalizations.of(context).translate('chat_clear_history_body')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalizations.of(context).translate('common_cancel'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Clear All', style: TextStyle(color: AppColors.rose)),

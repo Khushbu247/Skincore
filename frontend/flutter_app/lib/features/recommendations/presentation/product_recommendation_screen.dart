@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/localization/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
@@ -88,9 +89,9 @@ class _ProductRecommendationScreenState extends ConsumerState<ProductRecommendat
           labelColor: AppColors.purple,
           unselectedLabelColor: AppColors.muted,
           indicatorColor: AppColors.purple,
-          tabs: const [
-            Tab(icon: Icon(Icons.auto_awesome_rounded, size: 18), text: 'AI Recommendations'),
-            Tab(icon: Icon(Icons.spa_outlined, size: 18), text: 'My Routine'),
+          tabs: [
+            Tab(icon: const Icon(Icons.auto_awesome_rounded, size: 18), text: AppLocalizations.of(context).translate('tab_ai_recommendations')),
+            Tab(icon: const Icon(Icons.spa_outlined, size: 18), text: AppLocalizations.of(context).translate('tab_my_routine')),
           ],
         ),
       ),
@@ -154,7 +155,7 @@ class _ProductRecommendationScreenState extends ConsumerState<ProductRecommendat
                   foregroundColor: Colors.white,
                 ),
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Try Again'),
+                label: Text(AppLocalizations.of(context).translate('common_try_again')),
               ),
             ],
           ),
@@ -226,7 +227,7 @@ class _ProductRecommendationScreenState extends ConsumerState<ProductRecommendat
                         const Icon(Icons.auto_awesome_rounded, color: AppColors.purple, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          'AI Personalization Insight',
+                          AppLocalizations.of(context).translate('ai_insight'),
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: AppColors.purple,
@@ -263,7 +264,7 @@ class _ProductRecommendationScreenState extends ConsumerState<ProductRecommendat
 
             // Category Filter Chips
             Text(
-              'Category Filters',
+              AppLocalizations.of(context).translate('category_filters'),
               style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -279,7 +280,7 @@ class _ProductRecommendationScreenState extends ConsumerState<ProductRecommendat
                     padding: const EdgeInsets.only(right: 8.0),
                     child: FilterChip(
                       selected: isSelected,
-                      label: Text(cat),
+                      label: Text(AppLocalizations.of(context).translate('cat_${cat.toLowerCase().replaceAll(" ", "_")}')),
                       selectedColor: AppColors.purple,
                       labelStyle: TextStyle(
                         color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[800]),
@@ -300,7 +301,7 @@ class _ProductRecommendationScreenState extends ConsumerState<ProductRecommendat
 
             // Price Band Filter Chips
             Text(
-              'Price Budget',
+              AppLocalizations.of(context).translate('price_budget'),
               style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -312,11 +313,16 @@ class _ProductRecommendationScreenState extends ConsumerState<ProductRecommendat
                 itemBuilder: (context, index) {
                   final pb = _priceBands[index];
                   final isSelected = recState.selectedPriceBand.toLowerCase() == pb['value']!.toLowerCase();
+                  String val = pb['value']!;
+                  String locKey = 'price_all';
+                  if (val == 'budget') locKey = 'price_budget';
+                  if (val == 'mid_range') locKey = 'price_mid';
+                  if (val == 'premium') locKey = 'price_premium';
                   return Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: ChoiceChip(
                       selected: isSelected,
-                      label: Text(pb['label']!),
+                      label: Text(AppLocalizations.of(context).translate(locKey)),
                       selectedColor: AppColors.purple.withOpacity(0.2),
                       labelStyle: TextStyle(
                         color: isSelected ? AppColors.purple : (isDark ? Colors.grey[400] : Colors.grey[700]),
@@ -367,7 +373,7 @@ class _ProductRecommendationScreenState extends ConsumerState<ProductRecommendat
               ),
             ] else ...[
               Text(
-                'Recommended Products (${products.length})',
+                '${AppLocalizations.of(context).translate('recommended_products')} (${products.length})',
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
@@ -728,7 +734,7 @@ class _AddEditRoutineBottomSheetState extends ConsumerState<_AddEditRoutineBotto
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
-                      label: Text(type),
+                      label: Text(AppLocalizations.of(context).translate('routine_${type.toLowerCase()}')),
                       selected: isSelected,
                       selectedColor: AppColors.purple,
                       labelStyle: TextStyle(

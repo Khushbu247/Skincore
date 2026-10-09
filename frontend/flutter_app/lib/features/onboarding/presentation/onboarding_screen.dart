@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/localization/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/di/providers.dart';
@@ -67,7 +68,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           children: [
             Align(
               alignment: Alignment.topRight,
-              child: TextButton(onPressed: _finish, child: const Text('Skip')),
+              child: TextButton(onPressed: _finish, child: Text(AppLocalizations.of(context).translate('common_skip'))),
             ),
             Expanded(
               child: PageView.builder(

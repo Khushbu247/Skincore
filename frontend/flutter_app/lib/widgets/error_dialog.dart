@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import '../core/localization/app_localizations.dart';
 
 void showErrorDialog(BuildContext context, String message) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Notice'),
+      title: Text(AppLocalizations.of(context).translate('common_notice')),
       content: Text(message),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('OK'),
+          child: Text(AppLocalizations.of(context).translate('common_ok')),
         ),
       ],
     ),

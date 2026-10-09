@@ -96,7 +96,7 @@ class SettingsScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   SwitchListTile(
-                    title: Text(theme.brightness == Brightness.dark ? 'Dark Mode' : 'Light Mode'),
+                    title: Text(theme.brightness == Brightness.dark ? l10n.translate('common_dark_mode') : l10n.translate('common_light_mode')),
                     value: theme.brightness == Brightness.dark,
                     onChanged: (_) => ref.read(themeModeProvider.notifier).toggle(),
                     activeTrackColor: AppColors.purple,
@@ -351,14 +351,14 @@ class _PrivacyDataBottomSheetState extends State<_PrivacyDataBottomSheet> {
                 child: Column(
                   children: [
                     SwitchListTile(
-                      title: const Text('Anonymous Diagnostic Telemetry'),
-                      subtitle: const Text('Helps improve MobileNetV2 & SkinCore AI accuracy'),
+                      title: Text(AppLocalizations.of(context).translate('settings_telemetry')),
+                      subtitle: Text(AppLocalizations.of(context).translate('settings_telemetry_sub')),
                       value: _shareTelemetry,
                       onChanged: (val) {
                         setState(() => _shareTelemetry = val);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(val ? 'Telemetry sharing enabled' : 'Telemetry sharing disabled'),
+                            content: Text(val ? AppLocalizations.of(context).translate('settings_telemetry_enabled') : AppLocalizations.of(context).translate('settings_telemetry_disabled')),
                             duration: const Duration(seconds: 2),
                           ),
                         );
@@ -367,8 +367,8 @@ class _PrivacyDataBottomSheetState extends State<_PrivacyDataBottomSheet> {
                     ),
                     const Divider(height: 1),
                     SwitchListTile(
-                      title: const Text('Encrypt Local Medical Logs'),
-                      subtitle: const Text('Encrypt saved PDF & tabular scan history'),
+                      title: Text(AppLocalizations.of(context).translate('settings_encrypt')),
+                      subtitle: Text(AppLocalizations.of(context).translate('settings_encrypt_sub')),
                       value: _encryptLocalLogs,
                       onChanged: (val) {
                         setState(() => _encryptLocalLogs = val);
@@ -386,30 +386,30 @@ class _PrivacyDataBottomSheetState extends State<_PrivacyDataBottomSheet> {
                   children: [
                     ListTile(
                       leading: const Icon(Icons.cleaning_services_outlined, color: AppColors.purple),
-                      title: const Text('Clear Scan Cache'),
-                      subtitle: const Text('Frees local temporary cache and pre-rendered previews'),
+                      title: Text(AppLocalizations.of(context).translate('settings_clear_cache')),
+                      subtitle: Text(AppLocalizations.of(context).translate('settings_privacy_sub')),
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Scan cache cleared successfully!')),
+                          SnackBar(content: Text(AppLocalizations.of(context).translate('settings_cache_cleared'))),
                         );
                       },
                     ),
                     const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.download_outlined, color: AppColors.purple),
-                      title: const Text('Export My Medical Data'),
-                      subtitle: const Text('Download all tabular logs as a structured zip/JSON'),
+                      title: Text(AppLocalizations.of(context).translate('settings_export_data')),
+                      subtitle: Text(AppLocalizations.of(context).translate('settings_encrypt_sub')),
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Preparing medical data package for export...')),
+                          SnackBar(content: Text(AppLocalizations.of(context).translate('settings_exporting'))),
                         );
                       },
                     ),
                     const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.delete_forever_outlined, color: AppColors.danger),
-                      title: const Text('Delete Medical Data', style: TextStyle(color: AppColors.danger)),
-                      subtitle: const Text('Permanently remove stored reports and user profile history'),
+                      title: Text(AppLocalizations.of(context).translate('settings_delete_data'), style: const TextStyle(color: AppColors.danger)),
+                      subtitle: Text(AppLocalizations.of(context).translate('settings_records_deleted')),
                       onTap: () => _confirmDeleteData(context),
                     ),
                   ],
@@ -426,24 +426,24 @@ class _PrivacyDataBottomSheetState extends State<_PrivacyDataBottomSheet> {
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Delete Medical History?'),
-        content: const Text(
-          'This action cannot be undone. All saved skin scan reports, tabular records, and local history will be erased.',
+        title: Text(AppLocalizations.of(context).translate('settings_delete_confirm_title')),
+        content: Text(
+          AppLocalizations.of(context).translate('settings_delete_confirm_body'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).translate('common_cancel')),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () {
               Navigator.pop(dialogCtx);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('All medical records deleted.')),
+                SnackBar(content: Text(AppLocalizations.of(context).translate('settings_records_deleted'))),
               );
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text(AppLocalizations.of(context).translate('common_delete'), style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),

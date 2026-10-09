@@ -76,7 +76,7 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt_rounded, color: AppColors.purple),
-              title: const Text('Take a photo'),
+              title: Text(AppLocalizations.of(context).translate('scan_take_photo')),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
@@ -84,7 +84,7 @@ class _SkinScanScreenState extends ConsumerState<SkinScanScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_rounded, color: AppColors.purple),
-              title: const Text('Choose from gallery'),
+              title: Text(AppLocalizations.of(context).translate('scan_gallery')),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
@@ -372,12 +372,12 @@ class _PreviewView extends StatelessWidget {
           const SizedBox(height: 12),
           OutlinedButton(
             onPressed: onRetake,
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.refresh_rounded, size: 18),
-                SizedBox(width: 8),
-                Text('Retake / Choose another photo'),
+                const Icon(Icons.refresh_rounded, size: 18),
+                const SizedBox(width: 8),
+                Text(AppLocalizations.of(context).translate('scan_retake_photo')),
               ],
             ),
           ),
@@ -780,7 +780,7 @@ class _ResultView extends StatelessWidget {
           const SizedBox(height: 10),
           TextButton(
             onPressed: () => context.goNamed('home'),
-            child: const Center(child: Text('Back to Home')),
+            child: Center(child: Text(AppLocalizations.of(context).translate('scan_back_home'))),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/localization/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/di/providers.dart';
@@ -103,8 +104,8 @@ class _QuestionnaireScreenState extends ConsumerState<QuestionnaireScreen> {
       if (mounted) {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Skin Profile & Questionnaire saved permanently to account! ✨'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).translate('q_saved')),
             backgroundColor: AppColors.success,
           ),
         );

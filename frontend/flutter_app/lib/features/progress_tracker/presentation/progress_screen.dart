@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/localization/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -44,11 +45,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
       context: context,
       builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.cleaning_services_rounded, color: AppColors.purple),
-            SizedBox(width: 10),
-            Text('Clean Up Routine History'),
+            const Icon(Icons.cleaning_services_rounded, color: AppColors.purple),
+            const SizedBox(width: 10),
+            Text(AppLocalizations.of(context).translate('tracker_clean_history')),
           ],
         ),
         content: Column(
@@ -98,7 +99,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Cleaned up $deleted completion records older than 30 days. Routines & reports remain intact.'),
+                    content: Text(AppLocalizations.of(context).translate('tracker_cleaned_up')),
                   ),
                 );
               }
@@ -751,8 +752,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Text(
-                                      'TODAY\'S ADHERENCE DASHBOARD',
+                                    Text(AppLocalizations.of(context).translate('adherence_dashboard'),
                                       style: TextStyle(
                                         color: Colors.white70,
                                         fontSize: 11,
@@ -778,7 +778,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Text(
-                                    '${(adherenceRatio * 100).toInt()}% Done',
+                                    '${(adherenceRatio * 100).toInt()}${AppLocalizations.of(context).translate('percent_done')}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
@@ -805,13 +805,13 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
                               runSpacing: 8,
                               children: [
                                 Text(
-                                  '$todayCompletedCount of $totalRoutinesCount Routines Completed Today',
+                                  '$todayCompletedCount of $totalRoutinesCount ${AppLocalizations.of(context).translate('routines_completed_today')}',
                                   style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
                                 ),
                                 GestureDetector(
                                   onTap: () => context.pushNamed('recommendations'),
-                                  child: const Text(
-                                    'Manage Routines',
+                                  child: Text(
+                                    AppLocalizations.of(context).translate('manage_routines'),
                                     style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
                                   ),
                                 ),
@@ -835,8 +835,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
                                 crossAxisAlignment: WrapCrossAlignment.center,
                                 runSpacing: 8,
                                 children: [
-                                  const Text(
-                                    'Today\'s Routine Checklist',
+                                  Text(
+                                    AppLocalizations.of(context).translate('routine_checklist'),
                                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                   ),
                                   OutlinedButton.icon(
@@ -848,7 +848,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                     ),
                                     icon: const Icon(Icons.auto_delete_outlined, size: 14),
-                                    label: const Text('30-Day Cleanup', style: TextStyle(fontSize: 11)),
+                                    label: Text(AppLocalizations.of(context).translate('cleanup_30_day'), style: const TextStyle(fontSize: 11)),
                                   ),
                                 ],
                               ),
@@ -895,8 +895,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
                         crossAxisAlignment: WrapCrossAlignment.center,
                         runSpacing: 8,
                         children: [
-                          const Text(
-                            'Saved Medical Reports & Records',
+                          Text(
+                            AppLocalizations.of(context).translate('saved_reports'),
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
                           ),
                           Container(
@@ -906,7 +906,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              '${reports.length} Reports',
+                              '${reports.length} ${AppLocalizations.of(context).translate('reports_count')}',
                               style: const TextStyle(
                                 color: AppColors.purple,
                                 fontWeight: FontWeight.bold,
@@ -956,12 +956,12 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
                                 ),
                                 const SizedBox(height: 14),
                                 Text(
-                                  _searchQuery.isEmpty ? 'No medical reports saved yet' : 'No matching reports found',
+                                  _searchQuery.isEmpty ? AppLocalizations.of(context).translate('no_reports_yet') : AppLocalizations.of(context).translate('no_matching_reports'),
                                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 6),
-                                const Text(
-                                  'Complete your skin scan or profile survey to generate downloadable PDF medical reports.',
+                                Text(
+                                  AppLocalizations.of(context).translate('complete_scan_for_reports'),
                                   textAlign: TextAlign.center,
                                   style: TextStyle(color: AppColors.muted, fontSize: 13),
                                 ),
@@ -1100,7 +1100,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
                                               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                                             ),
                                             icon: const Icon(Icons.remove_red_eye_outlined, size: 16),
-                                            label: const Text('View Report', style: TextStyle(fontSize: 12)),
+                                            label: Text(AppLocalizations.of(context).translate('view_report'), style: const TextStyle(fontSize: 12)),
                                           ),
                                           ElevatedButton.icon(
                                             onPressed: () {
@@ -1114,14 +1114,14 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> with SingleTick
                                               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                                             ),
                                             icon: const Icon(Icons.download_rounded, size: 16),
-                                            label: const Text('Download PDF', style: TextStyle(fontSize: 12)),
+                                            label: Text(AppLocalizations.of(context).translate('download_pdf'), style: const TextStyle(fontSize: 12)),
                                           ),
                                           IconButton(
                                             icon: const Icon(Icons.delete_outline_rounded, size: 20, color: AppColors.muted),
                                             onPressed: () {
                                               ref.read(reportsProvider.notifier).deleteReport(report.id);
                                               ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Report deleted')),
+                                                SnackBar(content: Text(AppLocalizations.of(context).translate('tracker_report_deleted'))),
                                               );
                                             },
                                           ),

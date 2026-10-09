@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/localization/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -47,12 +48,12 @@ class _RecommendationsScreenState extends ConsumerState<RecommendationsScreen>
       context: context,
       builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text('Delete Routine Item?'),
-        content: Text('Are you sure you want to delete "${item.productName}" from your routine?'),
+        title: Text(AppLocalizations.of(context).translate('reco_delete_item_title')),
+        content: Text(AppLocalizations.of(context).translate('reco_delete_item_body')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).translate('common_cancel')),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -64,10 +65,10 @@ class _RecommendationsScreenState extends ConsumerState<RecommendationsScreen>
               Navigator.pop(dialogCtx);
               ref.read(skincareRoutineProvider.notifier).deleteRoutine(item.id);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${item.productName} deleted.')),
+                SnackBar(content: Text(AppLocalizations.of(context).translate('common_success'))),
               );
             },
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context).translate('common_delete')),
           ),
         ],
       ),
@@ -86,7 +87,7 @@ class _RecommendationsScreenState extends ConsumerState<RecommendationsScreen>
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Skincare Routine Management'),
+        title: Text(AppLocalizations.of(context).translate('reco_management')),
         centerTitle: true,
         actions: [
           IconButton(
@@ -100,7 +101,11 @@ class _RecommendationsScreenState extends ConsumerState<RecommendationsScreen>
           labelColor: AppColors.purple,
           unselectedLabelColor: AppColors.muted,
           indicatorColor: AppColors.purple,
-          tabs: _tabs.map((t) => Tab(text: t)).toList(),
+          tabs: _tabs.map((t) {
+            String key = 'routine_${t.toLowerCase()}';
+            if (t == 'All') key = 'cat_all';
+            return Tab(text: AppLocalizations.of(context).translate(key));
+          }).toList(),
         ),
       ),
       body: TabBarView(
@@ -271,7 +276,7 @@ class _RecommendationsScreenState extends ConsumerState<RecommendationsScreen>
         backgroundColor: AppColors.purple,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Add Routine', style: TextStyle(fontWeight: FontWeight.bold)),
+        label: Text(AppLocalizations.of(context).translate('common_add_to_routine'), style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -362,7 +367,7 @@ class _AddEditRoutineBottomSheetState
       );
       ref.read(skincareRoutineProvider.notifier).updateRoutine(updated);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Routine updated successfully!')),
+        SnackBar(content: Text(AppLocalizations.of(context).translate('reco_routine_updated'))),
       );
     } else {
       ref.read(skincareRoutineProvider.notifier).addRoutine(
@@ -371,7 +376,7 @@ class _AddEditRoutineBottomSheetState
             time: formattedTime,
           );
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Routine added successfully!')),
+        SnackBar(content: Text(AppLocalizations.of(context).translate('reco_routine_added'))),
       );
     }
 
@@ -440,7 +445,7 @@ class _AddEditRoutineBottomSheetState
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
-                      label: Text(type),
+                      label: Text(AppLocalizations.of(context).translate('routine_${type.toLowerCase()}')),
                       selected: isSelected,
                       selectedColor: AppColors.purple,
                       labelStyle: TextStyle(

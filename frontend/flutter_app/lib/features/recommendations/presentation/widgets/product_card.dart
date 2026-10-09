@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../models/product_recommendation.dart';
 import '../../../../providers/skincare_routine_provider.dart';
 import 'product_detail_sheet.dart';
@@ -49,11 +50,11 @@ class ProductCard extends ConsumerWidget {
         builder: (context, setDialogState) {
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Row(
+            title: Row(
               children: [
-                Icon(Icons.add_task_rounded, color: AppColors.purple),
-                SizedBox(width: 8),
-                Expanded(child: Text('Add to My Routine', overflow: TextOverflow.ellipsis)),
+                const Icon(Icons.add_task_rounded, color: AppColors.purple),
+                const SizedBox(width: 8),
+                Expanded(child: Text(AppLocalizations.of(context).translate('add_to_my_routine'), overflow: TextOverflow.ellipsis)),
               ],
             ),
             content: SingleChildScrollView(
@@ -137,7 +138,7 @@ class ProductCard extends ConsumerWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogCtx),
-                child: const Text('Cancel'),
+                child: Text(AppLocalizations.of(context).translate('common_cancel')),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -160,7 +161,7 @@ class ProductCard extends ConsumerWidget {
                     ),
                   );
                 },
-                child: const Text('Add to Routine'),
+                child: Text(AppLocalizations.of(context).translate('common_add_to_routine')),
               ),
             ],
           );
@@ -360,9 +361,9 @@ class ProductCard extends ConsumerWidget {
                         side: const BorderSide(color: AppColors.purple),
                       ),
                       icon: const Icon(Icons.add_rounded, size: 16, color: AppColors.purple),
-                      label: const Text(
-                        'Add to Routine',
-                        style: TextStyle(color: AppColors.purple, fontWeight: FontWeight.bold, fontSize: 12),
+                      label: Text(
+                        AppLocalizations.of(context).translate('common_add_to_routine'),
+                        style: const TextStyle(color: AppColors.purple, fontWeight: FontWeight.bold, fontSize: 12),
                       ),
                     ),
                   ),
@@ -377,7 +378,7 @@ class ProductCard extends ConsumerWidget {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       icon: const Icon(Icons.shopping_bag_outlined, size: 16),
-                      label: const Text('Buy', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      label: Text(AppLocalizations.of(context).translate('buy_now'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                     ),
                   ],
                 ],
